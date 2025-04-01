@@ -1,0 +1,37 @@
+
+
+#include "Arduino.h"
+#include "Enes100.h"
+
+
+int IRPin = 2;  // Check which digital pin the IR sensor is connected to
+int ledPin = 8; // Check which digital pin the LED is connected to
+int in1 = 6;
+int in2 = 7;
+void setup() {
+    Serial.begin(9600);  // Start Serial Monitor for debugging
+    pinMode(IRPin, INPUT); // Set IR sensor pin as an input
+    pinMode(ledPin, OUTPUT);
+    pinMode(in1, OUTPUT);
+    pinMode(in2, OUTPUT); // Set LED pin as an output
+}
+
+void loop() {
+    int irValue = digitalRead(IRPin); // Read IR sensor state
+    Serial.print("IR Sensor State: ");  
+    Serial.println(irValue);  // Print sensor value to Serial Monitor
+
+    if (irValue == 0) {  // If IR sensor detects an object (LOW means object detected)
+        digitalWrite(ledPin, HIGH); 
+        digitalWrite(in1, LOW);
+        digitalWrite(in2, LOW); // Turn on LED
+        Serial.println("Object detected! LED ON");
+    } else {  // If IR sensor does NOT detect an object (HIGH means no object)
+        digitalWrite(ledPin, LOW);  // Turn off LED
+        Serial.println("No object detected. LED OFF");
+        digitalWrite(in1, HIGH);
+        digitalWrite(in2, LOW);
+    }
+
+    delay(100); // Small delay for stability
+}
