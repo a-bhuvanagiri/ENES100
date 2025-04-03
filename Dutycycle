@@ -1,0 +1,34 @@
+#include "Enes100.h"
+
+
+#define CYCLE 0
+
+int signalPin = 1;
+const char* teamName = "Sabine's Carpenders";
+int teamMarker = 345;
+
+void setup() {
+  pinMode(signalPin, INPUT);
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 3, 2);
+  Enes100.println("Connected...");
+}
+
+void loop() {
+  unsigned long highTime = pulseIn(signalPin, HIGH);
+  unsigned long lowTime = pulseIn(signalPin, LOW);
+
+  if (highTime > 0 && lowTime > 0) {
+    float duty = (float)highTime / (highTime + lowTime) * 100.0;
+
+    int roundedDuty;
+    if (duty < 20)       roundedDuty = 10;
+    else if (duty < 40)  roundedDuty = 30;
+    else if (duty < 60)  roundedDuty = 50;
+    else if (duty < 80)  roundedDuty = 70;
+    else                 roundedDuty = 90;
+
+    Enes100.mission(CYCLE, roundedDuty);
+  }
+
+  delay(2000);
+}
