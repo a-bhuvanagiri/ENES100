@@ -1,13 +1,12 @@
-//for wifi module
-void setup() {
-//Connect digital pin 8 to the Tx pin of the wifi module.
-//Connect digital pin 9 to the Rx pin of the wifi module.
-Enes100.begin("It's lit", FIRE, 3, 1120, 8, 9);
-
-// Some other setup code...
-}
-
 //start of enes100 library code
+
+// Mission Points and Obstacles
+float pointA_x = 0.55, pointA_y = 1.4;
+float pointB_x = 0.55, pointB_y = 0.55;
+float obstacles[2][3][2] = {
+    {{1.5, 1.45}, {1.5, 1}, {1.5, 0.5}},  // First row of obstacles
+    {{2.3, 1.45}, {2.3, 1}, {2.3, 0.5}}   // Second row of obstacles
+
 #include "Enes100.h"
 
 void setup() {
