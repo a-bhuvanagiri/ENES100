@@ -18,7 +18,8 @@ void loop() {
 
   duration = pulseIn(echoPin, HIGH);
   distance = (duration*.0343)/2;
-  Serial.print("Distance: ");
+  Serial.print("At this distance: ");
   Serial.println(distance);
+  Serial.println(" obstacle detected");
   delay(100);
 }
