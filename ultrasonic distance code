@@ -2,6 +2,7 @@ const int trigPin = 9;
 const int echoPin = 10;
 
 float duration, distance;
+bool keepRunning = true;
 
 void setup() {
   pinMode(trigPin, OUTPUT);
@@ -10,6 +11,10 @@ void setup() {
 }
 
 void loop() {
+  if (!keepRunning) {
+    return; // This will stop the loop if keepRunning is false
+  }
+
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -17,9 +22,20 @@ void loop() {
   digitalWrite(trigPin, LOW);
 
   duration = pulseIn(echoPin, HIGH);
-  distance = (duration*.0343)/2;
+  distance = (duration * 0.0343) / 2;
   Serial.print("At this distance: ");
   Serial.println(distance);
-  Serial.println(" obstacle detected");
+
+  if (distance < 20) {
+    Serial.println("Obstacle detected");
+    stopLoop();
+  } else {
+    Serial.println("No obstacle found");
+  }
+
   delay(100);
+}
+
+void stopLoop() {
+  keepRunning = false;  // This will stop the loop after the condition is met
 }
