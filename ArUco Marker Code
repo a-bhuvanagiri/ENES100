@@ -1,21 +1,12 @@
-//start of enes100 library code
-
-// Mission Points and Obstacles
-float pointA_x = 0.55, pointA_y = 1.4;
-float pointB_x = 0.55, pointB_y = 0.55;
-float obstacles[2][3][2] = {
-    {{1.5, 1.45}, {1.5, 1}, {1.5, 0.5}},  // First row of obstacles
-    {{2.3, 1.45}, {2.3, 1}, {2.3, 0.5}}   // Second row of obstacles
-
 #include "Enes100.h"
 
 void setup() {
     // Initialize Enes100 Library
-    // Sabine's Carpenters, DATA, Marker ID, Room Number, Wifi Module TX Pin, Wifi Module RX Pin
-    Enes100.begin("Sabine's Carpenters", DATA, 205, 1120, 3, 2);
+    // Team Name, Mission Type, Marker ID, Room Number, Wifi Module TX Pin, Wifi Module RX Pin
+    Enes100.begin("Sabine's Carpenters", DATA, 11, 1120, 3, 2);
     // At this point we know we are connected.
-    Enes100.println("Connected...");
-}
+    Enes100.println("Connected.");
+    }
 
 void loop() {
     float x, y, t; bool v; // Declare variables to hold the data
@@ -40,9 +31,4 @@ void loop() {
         Enes100.println("Not visible"); // print not visible
     }
 
-    // Transmit the duty cycle of the data mission (7 for 70%)
-    Enes100.mission(CYCLE, 7);
-    // Transmit the magnetism of the data mission (in this case, not magnetic)
-    Enes100.mission(MAGNETISM, NOT_MAGNETIC);
-    delay(1000);
 }
