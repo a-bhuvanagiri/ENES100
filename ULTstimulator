@@ -36,7 +36,7 @@ void loop() {
 
     if (state == 0) {
       // First try turning left
-      theta = -3.14; // Turn to far left (simulate)
+      theta = (3.14/2); // Turn to far left (simulate)
       Serial.println("Turning left (-π)...");
       delay(1000); // simulate time to turn
       state = 1; // Updates the state so next time it knows you’ve already tried left and should try right next if needed.
@@ -44,7 +44,7 @@ void loop() {
     }
     else if (state == 1) {
       // If left is blocked, try turning right
-      theta = 3.14; // Turn to far right
+      theta = (-3.14/2); // Turn to far right
       Serial.println("Turning right (+π)...");
       delay(1000);
       state = 2;
