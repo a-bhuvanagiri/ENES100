@@ -1,0 +1,63 @@
+int trigPin = 11;    
+int echoPin = 12;    
+long duration;
+float cm;
+
+float theta = 0; // Facing forward at start
+int state = 0;   // 0 = center, 1 = left tried, 2 = right tried
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.println("Starting at center, facing forward.");
+}
+
+void loop() {
+  // Trigger ultrasonic pulse
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(4);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Measure echo time
+  duration = pulseIn(echoPin, HIGH);
+  cm = (duration / 2.0) / 29.1;
+
+  Serial.print("Distance: ");
+  Serial.print(cm);
+  Serial.print(" cm | Current theta: ");
+  Serial.println(theta);
+
+  // If obstacle is very close
+  if (cm <= 0.25) {
+    Serial.println("Obstacle detected!");
+
+    if (state == 0) {
+      // First try turning left
+      theta = -3.14; // Turn to far left (simulate)
+      Serial.println("Turning left (-π)...");
+      delay(1000); // simulate time to turn
+      state = 1; // Updates the state so next time it knows you’ve already tried left and should try right next if needed.
+      //If you're at the center and detect an obstacle, turn to the far left by simulating a new direction of -π
+    }
+    else if (state == 1) {
+      // If left is blocked, try turning right
+      theta = 3.14; // Turn to far right
+      Serial.println("Turning right (+π)...");
+      delay(1000);
+      state = 2;
+    }
+    
+  }
+  else {
+    // Path is clear
+    Serial.println("Path clear. Moving forward...");
+    theta = 0; // face forward again
+    state = 0; // reset state
+    delay(500); // simulate forward movement
+  }
+
+  delay(500); // delay between readings
+}
