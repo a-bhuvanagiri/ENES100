@@ -1,0 +1,67 @@
+#include "Tank.h"
+#include "Enes100.h"
+#include "Arduino.h"
+
+// Tank control
+int trigPin = 11;    
+int echoPin = 12;    
+long duration;
+float cm;
+
+float theta = 0; // Facing forward at start
+int state = 0;   // 0 = center, 1 = left tried, 2 = right tried
+
+void setup() {
+  Tank.begin();  // Initialize the tank
+  // No Serial communication here since it's not supported by the simulator.
+}
+
+void loop() {
+  // Read distance from the enabled ultrasonic sensor (Ultrasonic 1)
+  float cm = Tank.readDistanceSensor(1); // Get the distance from the first ultrasonic sensor (in meters)
+  cm = cm * 100; // Convert meters to centimeters for easier comparison
+
+  // Debug output can be removed here since Serial doesn't work in the simulator.
+  // You can add custom debugging if the simulator supports it (e.g., displaying text on the screen).
+
+    
+  if (cm > 50) {
+      
+        // If obstacle is very close (less than 25 cm)
+        theta = 0; // Face forward again
+        Tank.setLeftMotorPWM(255);  // Move forward
+        Tank.setRightMotorPWM(255); // Move forward
+        delay(500); // simulate forward movement
+    // If an obstacle is detected, try to avoid it
+    }
+    else if (state == 1) {
+      // If left is blocked, try turning right
+      theta = 3.14; // Turn to far right
+      Tank.setLeftMotorPWM(255);  // Set left motor to move right
+      Tank.setRightMotorPWM(-255);  // Set right motor to move right
+      delay(1000); // simulate time to turn
+      Tank.setLeftMotorPWM(0);  // Stop motors after turn
+      Tank.setRightMotorPWM(0);
+      state = 2;
+    }
+    
+    else if (state == 0) {
+      // First try turning left
+      theta = -3.14; // Turn to far left (simulate)
+      Tank.setLeftMotorPWM(-255);  // Set left motor to move left
+      Tank.setRightMotorPWM(255);  // Set right motor to move left
+      delay(1000); // simulate time to turn
+      Tank.setLeftMotorPWM(0);  // Stop motors after turn
+      Tank.setRightMotorPWM(0);
+      state = 1;
+  }
+  else {
+    // Path is clear, move forward
+    theta = 0; // Face forward again
+    Tank.setLeftMotorPWM(255);  // Move forward
+    Tank.setRightMotorPWM(255); // Move forward
+    delay(500); // simulate forward movement
+  }
+
+  delay(500); // Delay between readings
+}
