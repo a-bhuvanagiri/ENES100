@@ -23,6 +23,16 @@ if (cm <= 25){
       Tank.setRightMotorPWM(0);
       state = 2;
     }
+
+
+
+
+ if (Enes100.getX()>=3.8){
+         Tank.turnOffMotors();
+    } else {
+         Tank.setLeftMotorPWM(255);
+  Tank.setRightMotorPWM(255);
+    }
  
   else {
     // Path is clear, move forward
