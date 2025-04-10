@@ -1,0 +1,140 @@
+#include "Arduino.h"
+#include "Enes100.h"
+#include "Tank.h"
+
+// Tank control
+int trigPin = 11;    
+int echoPin = 12;    
+long duration;
+float cm;
+float theta = 0;
+int state = 0;   // 0 = center, 1 = left tried, 2 = right tried
+
+void setup() {
+    Enes100.begin("Simulator", DATA, 3, 1116, 8, 9);
+
+    Enes100.println("connected!");
+    float x = Enes100.getX();
+    Enes100.println(x);
+    Enes100.println(Enes100.getY());
+    Enes100.println(Enes100.getTheta());
+    Enes100.println(Enes100.isVisible());
+    Enes100.println(Enes100.isConnected());
+    float currentTheta = Enes100.getTheta();
+  Enes100.println(currentTheta);
+ Tank.begin();
+
+ 
+  // Rotate until facing forward (theta ≈ 0)
+  while (abs(currentTheta) > 0.05) { // Allow a small margin for accuracy
+    if (currentTheta > 0) {
+      // Turn right
+      Tank.setLeftMotorPWM(100);
+      Tank.setRightMotorPWM(-100);
+    } else {
+      // Turn left
+      Tank.setLeftMotorPWM(-100);
+      Tank.setRightMotorPWM(100);
+    }
+
+    delay(100); // Small delay to allow rotation
+    currentTheta = Enes100.getTheta(); // Update heading
+  }
+
+  // Stop after aligning
+  Tank.setLeftMotorPWM(0);
+  Tank.setRightMotorPWM(0);
+ //to go to mission site
+ if (Enes100.getY() > 0.55){
+     // Turn right
+     while (Enes100.getY() > 0.55 && Enes100.getTheta() > -1.6){
+      Tank.setLeftMotorPWM(100);
+      Tank.setRightMotorPWM(-100);
+     }
+      if (Enes100.getY() == 0.55){
+        Tank.setLeftMotorPWM(0);
+        Tank.setRightMotorPWM(0);
+        //go straight
+         while (abs(currentTheta) > 0.05) { // Allow a small margin for accuracy
+    if (currentTheta > 0) {
+      // Turn right
+      Tank.setLeftMotorPWM(100);
+      Tank.setRightMotorPWM(-100);
+    } else {
+      // Turn left
+      Tank.setLeftMotorPWM(-100);
+      Tank.setRightMotorPWM(100);
+    }
+
+    delay(100); // Small delay to allow rotation
+    currentTheta = Enes100.getTheta(); // Update heading
+      }
+     }
+ } else {
+     // Turn left
+     while (Enes100.getY() < 0.55 && Enes.getTheta > 1.6){
+      Tank.setLeftMotorPWM(-100);
+      Tank.setRightMotorPWM(100);
+     }
+ }
+ 
+
+ 
+  // Move forward a little to start
+  Tank.setLeftMotorPWM(255);
+  Tank.setRightMotorPWM(255);
+  delay(1000);
+  Tank.setLeftMotorPWM(0);
+  Tank.setRightMotorPWM(0);
+    delay(1000);
+  }
+
+
+void loop() {
+  float x = Enes100.getX();
+  float y = Enes100.getY();
+
+  // Do the Y-correction only once when near x = 3
+  static bool yCorrected = false;
+
+  if (!yCorrected && abs(x - 3.0) < 0.1 && y > 0.8) {
+    
+    // Turn to face downward (theta = -π/2)
+    while (abs(Enes100.getTheta() + 1.57) > 0.05) {
+      Tank.setLeftMotorPWM(100);
+      Tank.setRightMotorPWM(-100);
+      delay(100);
+    }
+    Tank.setLeftMotorPWM(0);
+    Tank.setRightMotorPWM(0);
+    delay(200);
+
+    // Move downward until y <= 0.5
+    while (Enes100.getY() > 0.5) {
+      Tank.setLeftMotorPWM(150);
+      Tank.setRightMotorPWM(150);
+      delay(100);
+    }
+    Tank.setLeftMotorPWM(0);
+    Tank.setRightMotorPWM(0);
+    delay(200);
+
+    // Turn to face forward again (theta = 0)
+    while (abs(Enes100.getTheta()) > 0.05) {
+      Tank.setLeftMotorPWM(-100);
+      Tank.setRightMotorPWM(100);
+      delay(100);
+    }
+    Tank.setLeftMotorPWM(0);
+    Tank.setRightMotorPWM(0);
+    delay(200);
+
+    // Mark that the correction is done
+    yCorrected = true;
+  }
+
+  // Continue moving forward
+  Tank.setLeftMotorPWM(150);
+  Tank.setRightMotorPWM(150);
+  delay(100);
+}
