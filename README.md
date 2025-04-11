@@ -1,9 +1,5 @@
 # ENES100
 
-
-
----
-
 ## Subsystem
 
 - **Servo**  
