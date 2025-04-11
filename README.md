@@ -1,6 +1,6 @@
 # ENES100
 
-## Subsystem
+## Subsystems
 
 - **Servo**  
   Handles servo motor control logic.  
