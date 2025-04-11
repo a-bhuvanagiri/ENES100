@@ -1,10 +1,10 @@
-# 🔧 enes100
+# ENES100
 
-> A project for ENES100 – Bringing engineering ideas to life with code, hardware, and innovation.
+
 
 ---
 
-## 📖 Subsystem
+## Subsystem
 
 - **Servo**  
   Handles servo motor control logic.  
@@ -12,7 +12,7 @@
 
 ---
 
-## 🎯 Sequences
+## Sequences
 
 ### 🟢 Mission Zone
 
@@ -28,16 +28,4 @@
 
 *(Add relevant items here when ready)*
 
----
 
-## 🧠 Project Structure
-
-```text
-enes100/
-├── Subsystems/
-│   └── servo.ino
-├── Sequences/
-│   ├── StopAtThePylon.ino
-│   └── ...
-├── README.md
-└── ...
