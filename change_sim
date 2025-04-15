@@ -17,7 +17,7 @@ int state = 0;   // 0 = center, 1 = left tried, 2 = right tried
 void setup() {
 Enes100.begin("Sabine's Carpenters", DATA, 11, 1120, 3, 2);
 // At this point we know we are connected.
-Enes100.println("Connected.")
+Enes100.println("Connected.");
 
   float x = Enes100.getX();
   float y = Enes100.getY();
@@ -122,8 +122,7 @@ Enes100.println("Connected.")
 void loop() {
   float x = Enes100.getX();
   float y = Enes100.getY();
-   Tank.setLeftMotorPWM(150);
-    Tank.setRightMotorPWM(150);
+   
   // Do the Y-correction only once when near x = 3
   static bool yCorrected = false;
 
