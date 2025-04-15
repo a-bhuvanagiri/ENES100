@@ -1,1 +1,177 @@
+#include "Arduino.h"
+#include "Enes100.h"
 
+// Tank control
+
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+long duration;
+float cm;
+float theta = 0;
+int state = 0;   // 0 = center, 1 = left tried, 2 = right tried
+
+void setup() {
+Enes100.begin("Sabine's Carpenters", DATA, 11, 1120, 3, 2);
+// At this point we know we are connected.
+Enes100.println("Connected.")
+
+  float x = Enes100.getX();
+  float y = Enes100.getY();
+  float currentTheta = Enes100.getTheta();
+  Enes100.println(x);
+  Enes100.println(y);
+  Enes100.println(currentTheta);
+  Enes100.println(Enes100.isVisible());
+  Enes100.println(Enes100.isConnected());
+
+  // If starting at (0.55, 1.45), do the special sequence
+  if (abs(x - 0.55) < 0.05 && abs(y - 1.45) < 0.1) {
+
+    // Face forward (theta ≈ 0)
+    while (abs(Enes100.getTheta()) > 0.05) {
+      float t = Enes100.getTheta();
+      if (t > 0) {
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      } else {
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      }
+      delay(100);
+    }
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+    delay(300);
+
+    // Turn to face downward (theta ≈ -π/2)
+    while (abs(Enes100.getTheta() + 1.57) > 0.05) {
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      delay(10);
+    }
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+    delay(1000);
+
+    // Move down to Y = 0.55
+    while (Enes100.getY() > 0.55) {
+    analogWrite(9, 255);
+    analogWrite(10, 255); 
+    digitalWrite(motor1pin1, HIGH);
+    digitalWrite(motor1pin2, LOW);
+    digitalWrite(motor2pin1, LOW);
+    digitalWrite(motor2pin2, HIGH);
+    delay(100);
+    }
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+    delay(300);
+
+    // Turn to face forward again (theta ≈ 0)
+    while (abs(Enes100.getTheta()) > 0.05) {
+      float t = Enes100.getTheta();
+      if (t > 0) {
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      } else {
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      }
+      delay(100);
+    }
+   digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+    delay(300);
+
+    // Move forward slightly
+    digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+    delay(1000);
+    digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+    delay(500);
+  }
+}
+
+void loop() {
+  float x = Enes100.getX();
+  float y = Enes100.getY();
+   Tank.setLeftMotorPWM(150);
+    Tank.setRightMotorPWM(150);
+  // Do the Y-correction only once when near x = 3
+  static bool yCorrected = false;
+
+  if (!yCorrected && abs(x - 3.0) < 0.1 && y > 0.8) {
+    // Turn to face downward (theta = -π/2)
+    while (abs(Enes100.getTheta() + 1.57) > 0.05) {
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      delay(100);
+    }
+     digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+    delay(200);
+
+    // Move downward until y <= 0.5
+    while (Enes100.getY() > 0.5) {
+       digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      delay(100);
+    }
+     digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+    delay(200);
+
+    // Turn to face forward again (theta = 0)
+    while (abs(Enes100.getTheta()) > 0.05) {
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      delay(100);
+    }
+  digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+    delay(200);
+
+    // Mark that the correction is done
+    yCorrected = true;
+    
+  }
+}
