@@ -122,7 +122,11 @@ Enes100.println("Connected.");
 void loop() {
   float x = Enes100.getX();
   float y = Enes100.getY();
-   
+  digitalWrite(motor1pin1, HIGH);
+  digitalWrite(motor1pin2, LOW);
+  digitalWrite(motor2pin1, LOW);
+  digitalWrite(motor2pin2, HIGH);
+
   // Do the Y-correction only once when near x = 3
   static bool yCorrected = false;
 
