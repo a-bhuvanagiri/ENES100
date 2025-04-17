@@ -1,0 +1,19 @@
+    #define hallPin 2 // Digital pin connected to the Hall sensor
+
+    void setup() {
+      Serial.begin(9600);
+      pinMode(hallPin, INPUT);
+    }
+
+    void loop() {
+      int hallValue = digitalRead(hallPin);
+      Serial.print("Hall Sensor Value: ");
+      Serial.println(hallValue);
+
+      if (hallValue == HIGH) {
+        Serial.println("Magnetic field detected!");
+      } else {
+        Serial.println("No magnetic field detected.");
+      }
+      delay(200);
+    }
