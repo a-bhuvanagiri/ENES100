@@ -1,4 +1,8 @@
-    #define hallPin 8 // Digital pin connected to the Hall sensor
+    #define hallPin A0 // Analog pin connected to the Hall sensor
+
+    float threshold = 100;
+    float sesnorValue = 0;
+
 
     void setup() {
       Serial.begin(9600);
@@ -6,14 +10,14 @@
     }
 
     void loop() {
-      int hallValue = digitalRead(hallPin);
-      Serial.print("Hall Sensor Value: ");
-      Serial.println(hallValue);
+      float sensorValue = analogRead(hallPin);
+      //Serial.print("Magnetic Sensor Value: ");
+      Serial.println(sensorValue);
 
-      if (hallValue == HIGH) {
-        Serial.println("Magnetic field detected!");
-      } else {
-        Serial.println("No magnetic field detected.");
-      }
+      //if (sensorValue > threshold) {
+       // Serial.println("Magnetic field detected!");
+      //} else {
+       // Serial.println("No magnetic field detected.");
+      //}
       delay(200);
     }
