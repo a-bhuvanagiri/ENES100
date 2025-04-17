@@ -1,4 +1,4 @@
-    #define hallPin 2 // Digital pin connected to the Hall sensor
+    #define hallPin 8 // Digital pin connected to the Hall sensor
 
     void setup() {
       Serial.begin(9600);
