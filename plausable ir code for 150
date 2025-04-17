@@ -1,0 +1,66 @@
+#include "Arduino.h"
+#include "Enes100.h"
+
+int IRPin = 2;  // IR sensor pin
+int ledPin = 8;  // LED pin to indicate object detection
+int in1 = 6;     // Motor control pin
+int in2 = 7;     // Motor control pin
+
+// Set a target distance to stop at (e.g., 150mm)
+const int targetDistance = 150;  // in mm
+
+void setup() {
+    Serial.begin(9600);  // Start Serial Monitor for debugging
+    pinMode(IRPin, INPUT); // Set IR sensor pin as an input
+    pinMode(ledPin, OUTPUT); // Set LED pin as an output
+    pinMode(in1, OUTPUT); // Motor control pin 1
+    pinMode(in2, OUTPUT); // Motor control pin 2
+
+    Enes100.begin("Simulator", DATA, 3, 1116, 8, 9);  // Initialize Enes100
+    Enes100.println("IR Navigation Initialized!");
+}
+
+void loop() {
+    int irValue = digitalRead(IRPin); // Read IR sensor state
+    Serial.print("IR Sensor State: ");
+    Serial.println(irValue);  // Print IR sensor value to Serial Monitor
+
+    if (irValue == 0) {  // If IR sensor detects an object (LOW means object detected)
+        digitalWrite(ledPin, HIGH); // Turn on LED
+        Serial.println("Object detected! LED ON");
+
+        // Move forward if we are not within the target distance (150 mm)
+        int distance = getDistanceFromIR();
+        Enes100.print("Distance to payload (mm): ");
+        Enes100.println(distance);
+
+        if (distance > targetDistance) {
+            // Move forward
+            digitalWrite(in1, HIGH);
+            digitalWrite(in2, LOW);
+            Enes100.println("Moving towards payload...");
+        } else {
+            // Stop once we are within 150 mm of the payload
+            digitalWrite(in1, LOW);
+            digitalWrite(in2, LOW);
+            Enes100.println("Target reached! Stopping.");
+        }
+    } else {  // If IR sensor does NOT detect an object (HIGH means no object)
+        digitalWrite(ledPin, LOW);  // Turn off LED
+        Serial.println("No object detected. LED OFF");
+
+        // Stop motors when no object is detected
+        digitalWrite(in1, LOW);
+        digitalWrite(in2, LOW);
+    }
+
+    delay(100); // Small delay for stability
+}
+
+// Function to convert IR sensor reading into approximate distance (in mm)
+int getDistanceFromIR() {
+    int irValue = analogRead(IRPin);  // Read IR sensor value (0-1023)
+    // Convert IR value to distance using calibration (assumed inverse correlation)
+    int distance = map(irValue, 0, 1023, 0, 200); // Map value to distance (0-200mm)
+    return distance;
+}
