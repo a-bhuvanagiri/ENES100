@@ -10,7 +10,7 @@
 
     void loop() {
       float sensorValue = analogRead(hallPin);
-      //Serial.print("Magnetic Sensor Value: ");
+      Serial.print("Magnetic Sensor Value: ");
       Serial.println(sensorValue);
 
       if (sensorValue < 1000) {
