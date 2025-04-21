@@ -24,8 +24,8 @@ void loop()
 
 //Controlling speed (0   = off and 255 = max speed):     
   //(Optional)
-analogWrite(9, 255); //ENA   pin
-analogWrite(10, 255); //ENB pin
+//analogWrite(9, 255); //ENA   pin
+//analogWrite(10, 255); //ENB pin
 
 drive('f');  // Move forward
 
@@ -40,6 +40,8 @@ while(a < 100){
 } 
 
 void drive(char input) {
+  analogWrite(9, 255); //ENA   pin
+  analogWrite(10, 255); //ENB pin
   switch (input) {
     case 'f': // Move forward
       digitalWrite(motor1pin1, HIGH);
