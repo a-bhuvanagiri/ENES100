@@ -1,0 +1,117 @@
+//double check pins
+int trigPin = 6;    
+int echoPin = 7;    
+long duration;
+float cm;
+
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+float theta = 0; // Facing forward at start
+int state = 0;   // 0 = center, 1 = left tried, 2 = right tried
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  Serial.println("Starting at center, facing forward.");
+}
+
+void loop() {
+  // Trigger ultrasonic pulse
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(4);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Measure echo time
+  duration = pulseIn(echoPin, HIGH);
+  cm = (duration / 2.0) / 29.1;
+
+  Serial.print("Distance: ");
+  Serial.print(cm);
+  Serial.print(" cm | Current theta: ");
+  Serial.println(theta);
+
+  // If obstacle is very close
+  if (cm <= 10) {
+    Serial.println("Obstacle detected!");
+
+    if (state == 0) {
+      // First try turning left
+      theta = -1.57; // Turn to far left (simulate)
+      Serial.println("Turning left (-π)...");
+      drive('l');
+      delay(1000); // simulate time to turn
+      state = 1; // Updates the state so next time it knows you’ve already tried left and should try right next if needed.
+      //If you're at the center and detect an obstacle, turn to the far left by simulating a new direction of -π
+    }
+    else if (state == 1) {
+      // If left is blocked, try turning right
+      theta = 1.57; // Turn to far right
+      Serial.println("Turning right (+π)...");
+      // Set motors in opposite directions so that the OTV can turn (this currently turns infinitely, so change it to turn according to the theta vals from the vision system)
+      drive('r');
+      delay(1000);
+      state = 2;
+    }
+    
+  }
+  else {
+    // Path is clear
+    Serial.println("Path clear. Moving forward...");
+    drive('f');
+    theta = 0; // face forward again
+    state = 0; // reset state
+    delay(500); // simulate forward movement
+  }
+
+  delay(500); // delay between readings
+}
+
+void drive(char input) {
+  analogWrite(9, 255); //ENA   pin
+  analogWrite(10, 255); //ENB pin
+  switch (input) {
+    case 'f': // Move forward
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+      
+    case 'b': // Move backward
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+      
+    case 'r': // Turn right
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+      
+    case 'l': // Turn left
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+      
+    case 's': // Turn left
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+      break;
+  }
+}
