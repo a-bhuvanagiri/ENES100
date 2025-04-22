@@ -9,9 +9,11 @@
     void setup() {
       Serial.begin(9600);
       pinMode(hallPin, INPUT);
-    }
+      servo.attach(11);
+}
 
     void loop() {
+    
       float sensorValue = analogRead(hallPin);
       Serial.print("Magnetic Sensor Value: ");
       Serial.println(sensorValue);
