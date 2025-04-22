@@ -27,7 +27,7 @@ void loop() {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(4);
   digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
+  delayMicroseconds(6);
   digitalWrite(trigPin, LOW);
 
   // Measure echo time
@@ -45,16 +45,16 @@ void loop() {
 
     if (state == 0) {
       // First try turning left
-      theta = -1.57; // Turn to far left (simulate)
+      theta = -3.14; // Turn to far left (simulate)
       Serial.println("Turning left (-π)...");
       drive('l');
-      delay(1000); // simulate time to turn
+      delay(800); // simulate time to turn
       state = 1; // Updates the state so next time it knows you’ve already tried left and should try right next if needed.
       //If you're at the center and detect an obstacle, turn to the far left by simulating a new direction of -π
     }
     else if (state == 1) {
       // If left is blocked, try turning right
-      theta = 1.57; // Turn to far right
+      theta = 3.14; // Turn to far right
       Serial.println("Turning right (+π)...");
       // Set motors in opposite directions so that the OTV can turn (this currently turns infinitely, so change it to turn according to the theta vals from the vision system)
       drive('r');
