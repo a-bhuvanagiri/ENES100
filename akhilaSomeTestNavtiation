@@ -1,0 +1,91 @@
+#include "Arduino.h"
+#include "Enes100.h"
+
+int IRPin = A0;  // Analog IR sensor pin
+int ledPin = 8;  // LED pin to indicate object detection
+int in1 = 6;     // Motor control pin
+int in2 = 7;     // Motor control pin
+
+float theta = 0;
+
+const char* teamName = "Sabine's Carpenders";
+int teamMarker = 345;
+
+const int targetDistance = 150;  // 150mm
+
+bool navigatedToStart = false;
+bool payloadTargeting = false;
+
+void setup() {
+    Enes100.begin("Sabine's Carpenters", DATA, 345, 1120,12, 13);
+    Serial.begin(9600);
+    pinMode(IRPin, INPUT);
+    pinMode(ledPin, OUTPUT);
+    pinMode(in1, OUTPUT);
+    pinMode(in2, OUTPUT);
+
+    Enes100.println("Connected...");
+}
+
+void loop() {
+
+    if (!navigatedToStart) {
+        float yPos = Enes100.getY();
+        Enes100.print("Initial Y Position: ");
+        Enes100.println(yPos);
+
+        if (yPos > 1.0) {
+            Enes100.println("Navigating to (0.55, 0.55)...");
+            theta = (-3.1415/2);
+
+        } else {
+            Enes100.println("Navigating to (0.55, 1.45)...");
+            theta = (3.1415/2);
+        }
+
+        navigatedToStart = true;
+    }
+
+    if (navigatedToStart && !payloadTargeting) {
+          Enes100.println("Arrived at target position. Getting to payload");
+          payloadTargeting = true;
+    }
+    
+
+    if (payloadTargeting) {
+        int digitalIR = digitalRead(IRPin);
+
+        if (digitalIR == 0) {
+            digitalWrite(ledPin, HIGH);
+            Enes100.println("Payload Detected!");
+
+            int distance = getDistanceFromIR();
+            Enes100.print("Distance to Payload (mm): ");
+            Enes100.println(distance);
+
+            if (distance > targetDistance) {
+                digitalWrite(in1, HIGH);
+                digitalWrite(in2, LOW);
+                Enes100.println("Approaching payload...");
+            } else {
+                digitalWrite(in1, LOW);
+                digitalWrite(in2, LOW);
+                Enes100.println("Within 150mm of payload. Stopping.");
+            }
+        } else {
+            digitalWrite(ledPin, LOW);
+            Enes100.println("No payload in sight.");
+            digitalWrite(in1, LOW);
+            digitalWrite(in2, LOW);
+        }
+    }
+
+    delay(100);
+}
+
+// Approximate IR to distance function (tweak this based on calibration)
+int getDistanceFromIR() {
+    int rawIR = analogRead(IRPin);
+    int distance = map(rawIR, 0, 1023, 200, 0);  // You might need to calibrate this better
+    return distance;
+}
