@@ -1,5 +1,7 @@
 
     #define hallPin A0 // Analog pin connected to the Hall sensor
+    #include <Servo.h>
+    Servo servo;
 
     float sesnorValue = 0;
 
