@@ -1,45 +1,5 @@
 #include "Enes100.h"
 
-
-#define CYCLE 0
-
-int signalPin = 1;
-const char* teamName = "Sabine's Carpenders";
-int teamMarker = 345;
-
-void setup() {
-  pinMode(signalPin, INPUT);
-  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 3, 2);
-  Enes100.println("Connected...");
-}
-
-void loop() {
-  unsigned long highTime = pulseIn(signalPin, HIGH);
-  unsigned long lowTime = pulseIn(signalPin, LOW);
-
-  if (highTime > 0 && lowTime > 0) {
-    float duty = (float)highTime / (highTime + lowTime) * 100.0;
-
-    int roundedDuty;
-    if (duty < 20)       roundedDuty = 10;
-    else if (duty < 40)  roundedDuty = 30;
-    else if (duty < 60)  roundedDuty = 50;
-    else if (duty < 80)  roundedDuty = 70;
-    else                 roundedDuty = 90;
-
-    Enes100.mission(CYCLE, roundedDuty);
-  }
-
-  delay(2000);
-}
-
-
-
-#potential 5% code
-
-
-#include "Enes100.h"
-
 #define CYCLE 0
 
 int signalPin = 1;  // The pin where the PWM signal is received
@@ -48,7 +8,7 @@ int teamMarker = 345;
 
 void setup() {
   pinMode(signalPin, INPUT);
-  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 3, 2);  // Initialize communication with Enes100
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);  // Initialize communication with Enes100
   Enes100.println("Connected...");
 }
 
@@ -60,6 +20,8 @@ void loop() {
     // Calculate the duty cycle as a percentage
     float dutyCycle = (float)highTime / (highTime + lowTime) * 100.0;
     
+
+
     // Round the duty cycle to the nearest 10% (as specified)
     int roundedDuty;
     if (dutyCycle < 20) {
@@ -75,13 +37,14 @@ void loop() {
     }
 
     // Transmit the rounded duty cycle to Enes100
-    Enes100.mission(CYCLE, roundedDuty);
+   
+    Enes100.mission(CYCLE,100-roundedDuty);
 
     // Debugging output for monitoring duty cycle
     Enes100.print("Duty Cycle: ");
-    Enes100.print(dutyCycle);
+    Enes100.print(100 - dutyCycle);
     Enes100.print("%, Rounded Duty: ");
-    Enes100.println(roundedDuty);
+    Enes100.println(100- roundedDuty);
   }
 
   // Delay for a short period before reading again
