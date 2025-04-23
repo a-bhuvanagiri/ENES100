@@ -5,7 +5,7 @@ int teamMarker = 345;
 
 void setup() {
     // Initialize Enes100 Library
-    Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 3, 2);
+    Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 13, 12);
   Enes100.println("Connected...");
 
    Serial.begin(9600);
