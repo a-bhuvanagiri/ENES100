@@ -36,13 +36,12 @@ int motor2pin2 = 5;
 
 void setup() {
   // put your setup code here, to run once:
-  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1116, 12, 13);
   Enes100.print("Working as intended.");
-
 
   pinMode(motor1pin1, OUTPUT);
   pinMode(motor1pin2, OUTPUT);
-  pinMode(motor2pin1,   OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
   pinMode(motor2pin2, OUTPUT);
 
   //(Optional)
@@ -57,12 +56,17 @@ void loop()
   //case for start pos a:
   if(Enes100.getY() > 1){
     Enes100.println("In position A.");
-    while(fabs(Enes100.getTheta()) > 0.02){
+    while(fabs(Enes100.getTheta()) > 0.2){
+      drive('r');
+    }
+
+    Enes100.println("Let's get more precise");
+    while(fabs(Enes100.getTheta()) > 0.015){
       Enes100.println(Enes100.getTheta());
       drive('r');
       delay(50);
       drive('s');
-      delay(300);
+      delay(150);
     }
     Enes100.println("Facing south");
 
@@ -74,7 +78,7 @@ void loop()
       a=analogRead(A1); 
     }
 
-    delay(300);
+    delay(200);
     drive('s');
     Enes100.println("I am at the pylon and have stopped.");
     delay(100000);
@@ -84,7 +88,32 @@ void loop()
   //case for start pos b:
   else{
     Enes100.println("In position B.");
+    while(fabs(Enes100.getTheta()) < 2.94){
+      drive('l');
+    }
 
+    Enes100.println("Let's get more precise");
+    while(fabs(Enes100.getTheta()) < 3.125){
+      Enes100.println(Enes100.getTheta());
+      drive('l');
+      delay(50);
+      drive('s');
+      delay(150);
+    }
+    Enes100.println("Facing north");
+
+
+    int a;
+    a=analogRead(A1); 
+    while(a > 100){
+      drive('f');
+      a=analogRead(A1); 
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+    delay(100000);
   }
 
   //drive east
