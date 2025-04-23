@@ -6,6 +6,9 @@ int ledPin = 8;  // LED pin to indicate object detection
 int in1 = 6;     // Motor control pin
 int in2 = 7;     // Motor control pin
 
+int in3 = 9; 
+int in4 = 10;
+
 float theta = 0;
 
 const char* teamName = "Sabine's Carpenders";
@@ -24,6 +27,9 @@ void setup() {
     pinMode(ledPin, OUTPUT);
     pinMode(in1, OUTPUT);
     pinMode(in2, OUTPUT);
+    pinMode(in3, OUTPUT);
+    pinMode(in4, OUTPUT);
+
 
     Enes100.println("Connected...");
 }
@@ -47,7 +53,7 @@ void loop() {
     }
 
     if (navigatedToStart && !alignedToPayload) {
-        float currentAngle = Enes100.angle();
+        float currentAngle = Enes100.getTheta();
         Enes100.print("Current Angle: ");
         Enes100.println(currentAngle);
         Enes100.print("Target Theta: ");
@@ -109,21 +115,29 @@ void loop() {
 void moveForward() {
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
 }
 
 void stopMotors() {
     digitalWrite(in1, LOW);
     digitalWrite(in2, LOW);
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);
 }
 
 void turnLeft() {
     digitalWrite(in1, LOW);
     digitalWrite(in2, HIGH);
+     digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
 }
 
 void turnRight() {
     digitalWrite(in1, HIGH);
-    digitalWrite(in2, LOW); // Same as forward, adjust if needed
+    digitalWrite(in2, LOW);
+     digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
 }
 
 // ---- IR conversion ----
