@@ -14,10 +14,11 @@ int teamMarker = 345;
 const int targetDistance = 150;  // 150mm
 
 bool navigatedToStart = false;
+bool alignedToPayload = false;
 bool payloadTargeting = false;
 
 void setup() {
-    Enes100.begin("Sabine's Carpenters", DATA, 345, 1120,12, 13);
+    Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
     Serial.begin(9600);
     pinMode(IRPin, INPUT);
     pinMode(ledPin, OUTPUT);
@@ -35,24 +36,48 @@ void loop() {
         Enes100.println(yPos);
 
         if (yPos > 1.0) {
-            Enes100.println("Navigating to (0.55, 0.55)...");
-            theta = (-3.1415/2);
-
+            Enes100.println("Target: (0.55, 0.55)");
+            theta = -PI / 2;
         } else {
-            Enes100.println("Navigating to (0.55, 1.45)...");
-            theta = (3.1415/2);
+            Enes100.println("Target: (0.55, 1.45)");
+            theta = PI / 2;
         }
 
         navigatedToStart = true;
     }
 
-    if (navigatedToStart && !payloadTargeting) {
-          Enes100.println("Arrived at target position. Getting to payload");
-          payloadTargeting = true;
-    }
-    
+    if (navigatedToStart && !alignedToPayload) {
+        float currentAngle = Enes100.angle();
+        Enes100.print("Current Angle: ");
+        Enes100.println(currentAngle);
+        Enes100.print("Target Theta: ");
+        Enes100.println(theta);
 
-    if (payloadTargeting) {
+        float diff = theta - currentAngle;
+
+        // Normalize angle between -PI and PI
+        while (diff > PI) diff -= 2 * PI;
+        while (diff < -PI) diff += 2 * PI;
+
+        if (abs(diff) > 0.1) {
+            if (diff > 0) {
+                Enes100.println("Turning Right");
+                turnRight();
+            } else {
+                Enes100.println("Turning Left");
+                turnLeft();
+            }
+        } else {
+            stopMotors();
+            alignedToPayload = true;
+            Enes100.println("Aligned with payload. Proceeding to IR detection.");
+        }
+
+        delay(100);
+        return;
+    }
+
+    if (alignedToPayload) {
         int digitalIR = digitalRead(IRPin);
 
         if (digitalIR == 0) {
@@ -64,28 +89,46 @@ void loop() {
             Enes100.println(distance);
 
             if (distance > targetDistance) {
-                digitalWrite(in1, HIGH);
-                digitalWrite(in2, LOW);
                 Enes100.println("Approaching payload...");
+                moveForward();
             } else {
-                digitalWrite(in1, LOW);
-                digitalWrite(in2, LOW);
-                Enes100.println("Within 150mm of payload. Stopping.");
+                Enes100.println("Within 150mm. Stopping.");
+                stopMotors();
             }
         } else {
             digitalWrite(ledPin, LOW);
             Enes100.println("No payload in sight.");
-            digitalWrite(in1, LOW);
-            digitalWrite(in2, LOW);
+            stopMotors();
         }
     }
 
     delay(100);
 }
 
-// Approximate IR to distance function (tweak this based on calibration)
+// ---- Motor helper functions ----
+void moveForward() {
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+}
+
+void stopMotors() {
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+}
+
+void turnLeft() {
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, HIGH);
+}
+
+void turnRight() {
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW); // Same as forward, adjust if needed
+}
+
+// ---- IR conversion ----
 int getDistanceFromIR() {
     int rawIR = analogRead(IRPin);
-    int distance = map(rawIR, 0, 1023, 200, 0);  // You might need to calibrate this better
+    int distance = map(rawIR, 0, 1023, 200, 0); // You can tweak this
     return distance;
 }
