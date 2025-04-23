@@ -56,12 +56,12 @@ void loop()
   //case for start pos a:
   if(Enes100.getY() > 1){
     Enes100.println("In position A.");
-    while(fabs(Enes100.getTheta()) > 0.2){
+    while((fabs(Enes100.getTheta()) > 0.2)  && (Enes100.getTheta() != -1)){
       drive('r');
     }
 
     Enes100.println("Let's get more precise");
-    while(fabs(Enes100.getTheta()) > 0.015){
+    while((fabs(Enes100.getTheta()) > 0.015)  && (Enes100.getTheta() != -1)){
       Enes100.println(Enes100.getTheta());
       drive('r');
       delay(50);
@@ -88,12 +88,12 @@ void loop()
   //case for start pos b:
   else{
     Enes100.println("In position B.");
-    while(fabs(Enes100.getTheta()) < 2.94){
+    while((fabs(Enes100.getTheta()) < 2.8) && (Enes100.getTheta() != -1)){
       drive('l');
     }
 
     Enes100.println("Let's get more precise");
-    while(fabs(Enes100.getTheta()) < 3.125){
+    while((fabs(Enes100.getTheta()) < 3.11) && (Enes100.getTheta() != -1)){
       Enes100.println(Enes100.getTheta());
       drive('l');
       delay(50);
