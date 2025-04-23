@@ -28,9 +28,6 @@ float south = 0;
 float west = -1.57;
 
 // Tank control
-int tx = 13;    
-int rx = 12;   
-
 int motor1pin1 = 2;
 int motor1pin2 = 3;
 
@@ -60,8 +57,12 @@ void loop()
   //case for start pos a:
   if(Enes100.getY() > 1){
     Enes100.println("In position A.");
-    while(Enes100.getTheta() > 0.04 || Enes100.getTheta() < -0.04){
+    while(fabs(Enes100.getTheta()) > 0.03){
+      Enes100.println(Enes100.getTheta());
       drive('r');
+      delay(200);
+      drive('s');
+      delay(200);
     }
     Enes100.println("Facing south");
 
