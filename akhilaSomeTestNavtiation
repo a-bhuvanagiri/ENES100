@@ -3,26 +3,27 @@
 
 int IRPin = A0;  // Analog IR sensor pin
 int ledPin = 8;  // LED pin to indicate object detection
-int in1 = 6;     // Motor control pin
-int in2 = 7;     // Motor control pin
-
-int in3 = 9; 
-int in4 = 10;
+int in1 = 6;     // Left motor forward
+int in2 = 7;     // Left motor reverse
+int in3 = 9;     // Right motor forward
+int in4 = 10;    // Right motor reverse
 
 float theta = 0;
 
-const char* teamName = "Sabine's Carpenders";
+const char* teamName = "Sabine's Carpenters";
 int teamMarker = 345;
 
 const int targetDistance = 150;  // 150mm
 
 bool navigatedToStart = false;
 bool alignedToPayload = false;
-bool payloadTargeting = false;
 
 void setup() {
-    Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
     Serial.begin(9600);
+
+    Enes100.begin(teamName, DATA, teamMarker, 1120, 12, 13); // Adjust last 2 pins if needed
+    delay(2000); // Give time to localize
+
     pinMode(IRPin, INPUT);
     pinMode(ledPin, OUTPUT);
     pinMode(in1, OUTPUT);
@@ -30,14 +31,19 @@ void setup() {
     pinMode(in3, OUTPUT);
     pinMode(in4, OUTPUT);
 
-
     Enes100.println("Connected...");
+    Serial.println("Setup complete.");
 }
 
 void loop() {
+    Serial.println("Looping...");
 
+    // Step 1: Navigate to initial position
     if (!navigatedToStart) {
         float yPos = Enes100.getY();
+        Serial.print("yPos = ");
+        Serial.println(yPos);
+
         Enes100.print("Initial Y Position: ");
         Enes100.println(yPos);
 
@@ -50,14 +56,14 @@ void loop() {
         }
 
         navigatedToStart = true;
+        delay(1000);
     }
 
+    // Step 2: Rotate toward payload direction
     if (navigatedToStart && !alignedToPayload) {
         float currentAngle = Enes100.getTheta();
-        Enes100.print("Current Angle: ");
-        Enes100.println(currentAngle);
-        Enes100.print("Target Theta: ");
-        Enes100.println(theta);
+        Serial.print("Current angle: ");
+        Serial.println(currentAngle);
 
         float diff = theta - currentAngle;
 
@@ -83,16 +89,15 @@ void loop() {
         return;
     }
 
+    // Step 3: IR detection and approach
     if (alignedToPayload) {
-        int digitalIR = digitalRead(IRPin);
+        int distance = getDistanceFromIR();
+        Serial.print("IR distance (mm): ");
+        Serial.println(distance);
 
-        if (digitalIR == 0) {
+        if (distance > 0 && distance < 300) {
             digitalWrite(ledPin, HIGH);
             Enes100.println("Payload Detected!");
-
-            int distance = getDistanceFromIR();
-            Enes100.print("Distance to Payload (mm): ");
-            Enes100.println(distance);
 
             if (distance > targetDistance) {
                 Enes100.println("Approaching payload...");
@@ -113,6 +118,7 @@ void loop() {
 
 // ---- Motor helper functions ----
 void moveForward() {
+    Serial.println("Moving forward");
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
     digitalWrite(in3, HIGH);
@@ -120,6 +126,7 @@ void moveForward() {
 }
 
 void stopMotors() {
+    Serial.println("Stopping motors");
     digitalWrite(in1, LOW);
     digitalWrite(in2, LOW);
     digitalWrite(in3, LOW);
@@ -127,22 +134,24 @@ void stopMotors() {
 }
 
 void turnLeft() {
+    Serial.println("Turning left");
     digitalWrite(in1, LOW);
     digitalWrite(in2, HIGH);
-     digitalWrite(in3, HIGH);
+    digitalWrite(in3, HIGH);
     digitalWrite(in4, LOW);
 }
 
 void turnRight() {
+    Serial.println("Turning right");
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
-     digitalWrite(in3, LOW);
+    digitalWrite(in3, LOW);
     digitalWrite(in4, HIGH);
 }
 
-// ---- IR conversion ----
+// ---- IR distance conversion ----
 int getDistanceFromIR() {
     int rawIR = analogRead(IRPin);
-    int distance = map(rawIR, 0, 1023, 200, 0); // You can tweak this
+    int distance = map(rawIR, 0, 1023, 200, 0); // You can calibrate this further
     return distance;
 }
