@@ -1,0 +1,317 @@
+#include "Arduino.h"
+#include "Enes100.h"
+
+// Pin definitions
+int trigPin = 6;    
+int echoPin = 7;    
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+// Variables for ultrasonic sensor
+long duration;
+float cm;
+
+// Navigation variables
+int state = 0;   // 0 = center, 1 = left tried, 2 = right tried
+bool destinationReached = false;
+float targetX = 3.5;  // Goal is near the right side of the arena
+float targetY = 1.0;  // Middle of the arena height-wise
+float positionTolerance = 0.1; // How close we need to be to consider "at position"
+
+// Boundary positions
+float leftBoundary = 0.2;  // Far left position (x-coordinate)
+float rightBoundary = 3.8; // Far right position (x-coordinate)
+
+// Movement control constants
+int normalSpeed = 200;
+int turnSpeed = 150;
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(9600);
+  
+  // Initialize Enes100 vision system with correct parameters
+  // Team Name, Mission Type, Marker ID, Room Number, TX Pin, RX Pin
+  Enes100.begin("Sabine's Carpenters", DATA, 11, 1120, 12, 13);
+  
+  // Configure pins
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+  
+  // Enable pins for motor drivers (PWM speed control)
+  pinMode(9, OUTPUT);  // ENA
+  pinMode(10, OUTPUT); // ENB
+  
+  Enes100.println("OTV initialized. Starting navigation...");
+
+  // Print initial position
+  if (Enes100.isVisible()) {
+    Enes100.print("Initial position: X=");
+    Enes100.print(Enes100.getX());
+    Enes100.print(", Y=");
+    Enes100.print(Enes100.getY());
+    Enes100.print(", Theta=");
+    Enes100.println(Enes100.getTheta());
+  } else {
+    Enes100.println("ArUco marker not visible. Cannot determine position.");
+  }
+}
+
+void loop() {
+ 
+
+  // Get current position from vision system
+  float currentX = Enes100.getX();
+  float currentY = Enes100.getY();
+  float currentTheta = Enes100.getTheta();
+
+  // Print current position (limit updates to reduce spam)
+  static unsigned long lastPrintTime = 0;
+  if (millis() - lastPrintTime > 1000) {
+    Enes100.print("Position: X=");
+    Enes100.print(currentX);
+    Enes100.print(", Y=");
+    Enes100.print(currentY);
+    Enes100.print(", Theta=");
+    Enes100.println(currentTheta);
+    lastPrintTime = millis();
+  }
+
+  // Check if we've reached our destination
+  if (abs(currentX - targetX) < positionTolerance && 
+      abs(currentY - targetY) < positionTolerance && 
+      !destinationReached) {
+    Enes100.println("Destination reached!");
+    stop();
+    destinationReached = true;
+    return;
+  }
+
+  // Measure distance to obstacles
+  float obstacleDistance = getDistance();
+  Enes100.print("Obstacle distance: ");
+  Enes100.println(obstacleDistance);
+
+  // If we're very close to an obstacle
+  if (obstacleDistance <= 15) {
+    handleObstacle(currentX, currentY, currentTheta);
+  } else {
+    // Path is clear, navigate toward destination
+    navigateToDestination(currentX, currentY, currentTheta);
+  }
+
+  delay(100); // Short delay between navigation cycles
+}
+
+// Function to measure distance using ultrasonic sensor
+float getDistance() {
+  // Trigger ultrasonic pulse
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(4);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  // Measure echo time
+  duration = pulseIn(echoPin, HIGH);
+  return (duration / 2.0) / 29.1; // Convert to cm
+}
+
+// Handle obstacle detection with specific navigation strategy
+void handleObstacle(float x, float y, float theta) {
+  Enes100.println("Obstacle detected!");
+  
+  // Stop first
+  stop();
+  delay(200);
+  
+  if (state == 0) {
+    // First try going left (west) when in center
+    Enes100.println("Obstacle in center path, trying to go far left");
+    
+    // Turn to face west (negative x direction)
+    turnToAngle(-3.14); // or 3.14, they're equivalent (π radians)
+    delay(500); // Give time for the turn to complete and vision system to update
+    
+    // Move toward the far left side
+    Enes100.println("Moving to far left boundary");
+    while (Enes100.isVisible() && Enes100.getX() > leftBoundary) {
+      forward(normalSpeed);
+      delay(100);
+      
+      // Safety check - stop if obstacle detected
+      if (getDistance() < 10) {
+        stop();
+        break;
+      }
+    }
+    stop();
+    delay(500);
+    
+    // After reaching far left, turn to face north (forward)
+    Enes100.println("Turning to face north (forward)");
+    turnToAngle(1.57); // π/2 radians
+    delay(500);
+    
+    state = 1; // Mark that we've tried the left path
+  } 
+  else if (state == 1) {
+    // If left path is blocked, try going far right
+    Enes100.println("Left path blocked, trying to go far right");
+    
+    // Turn to face east (positive x direction)
+    turnToAngle(0); // 0 radians
+    delay(500);
+    
+    // Move toward the far right side
+    Enes100.println("Moving to far right boundary");
+    while (Enes100.isVisible() && Enes100.getX() < rightBoundary) {
+      forward(normalSpeed);
+      delay(100);
+      
+      // Safety check - stop if obstacle detected
+      if (getDistance() < 10) {
+        stop();
+        break;
+      }
+    }
+    stop();
+    delay(500);
+    
+    // After reaching far right, turn to face north (forward)
+    Enes100.println("Turning to face north (forward)");
+    turnToAngle(1.57); // π/2 radians
+    delay(500);
+    
+    state = 2; // Mark that we've tried the right path
+  }
+  else {
+    // If both left and right failed, try turning around
+    Enes100.println("Both far left and far right paths blocked, turning around");
+    
+    // Turn to face south (backward)
+    turnToAngle(-1.57); // -π/2 radians
+    delay(500);
+    
+    // Move backward a bit
+    backward(normalSpeed);
+    delay(1000);
+    stop();
+    
+    // Reset state to try center path again from new position
+    state = 0;
+  }
+  
+  // Check if path is clear now
+  if (getDistance() > 15) {
+    // Path is clear, continue forward
+    Enes100.println("Path now clear, continuing forward");
+    forward(normalSpeed);
+  }
+}
+
+// Navigate toward destination
+void navigateToDestination(float currentX, float currentY, float currentTheta) {
+  // Calculate angle to target
+  float targetAngle = atan2(targetY - currentY, targetX - currentX);
+  
+  // If we're not facing the right direction, turn first
+  if (abs(currentTheta - targetAngle) > 0.1) {
+    turnToAngle(targetAngle);
+    return;
+  }
+  
+  // We're facing the right direction, move forward
+  Enes100.println("Moving toward destination");
+  forward(normalSpeed);
+}
+
+// Turn to face a specific angle (in radians)
+void turnToAngle(float targetAngle) {
+  // Normalize target angle to be between -PI and PI
+  while (targetAngle > PI) targetAngle -= 2 * PI;
+  while (targetAngle < -PI) targetAngle += 2 * PI;
+  
+  // Get current angle
+  float currentTheta = Enes100.getTheta();
+  
+  // Calculate angle difference
+  float angleDiff = targetAngle - currentTheta;
+  
+  // Normalize the difference to be between -PI and PI
+  while (angleDiff > PI) angleDiff -= 2 * PI;
+  while (angleDiff < -PI) angleDiff += 2 * PI;
+  
+  Enes100.print("Turning from ");
+  Enes100.print(currentTheta);
+  Enes100.print(" to ");
+  Enes100.println(targetAngle);
+  
+  // Turn in the appropriate direction
+  if (angleDiff > 0.05) {
+    // Turn clockwise
+    while (Enes100.isVisible() && abs(Enes100.getTheta() - targetAngle) > 0.1) {
+      turnRight(turnSpeed);
+      delay(50);
+    }
+  } else if (angleDiff < -0.05) {
+    // Turn counter-clockwise
+    while (Enes100.isVisible() && abs(Enes100.getTheta() - targetAngle) > 0.1) {
+      turnLeft(turnSpeed);
+      delay(50);
+    }
+  }
+  
+  // Stop after completing turn
+  stop();
+}
+
+// Basic movement functions
+void forward(int speed) {
+  analogWrite(9, speed);  // ENA
+  analogWrite(10, speed); // ENB
+  digitalWrite(motor1pin1, HIGH);
+  digitalWrite(motor1pin2, LOW);
+  digitalWrite(motor2pin1, LOW);
+  digitalWrite(motor2pin2, HIGH);
+}
+
+void backward(int speed) {
+  analogWrite(9, speed);  // ENA
+  analogWrite(10, speed); // ENB
+  digitalWrite(motor1pin1, LOW);
+  digitalWrite(motor1pin2, HIGH);
+  digitalWrite(motor2pin1, HIGH);
+  digitalWrite(motor2pin2, LOW);
+}
+
+void turnRight(int speed) {
+  analogWrite(9, speed);  // ENA
+  analogWrite(10, speed); // ENB
+  digitalWrite(motor1pin1, HIGH);
+  digitalWrite(motor1pin2, LOW);
+  digitalWrite(motor2pin1, HIGH);
+  digitalWrite(motor2pin2, LOW);
+}
+
+void turnLeft(int speed) {
+  analogWrite(9, speed);  // ENA
+  analogWrite(10, speed); // ENB
+  digitalWrite(motor1pin1, LOW);
+  digitalWrite(motor1pin2, HIGH);
+  digitalWrite(motor2pin1, LOW);
+  digitalWrite(motor2pin2, HIGH);
+}
+
+void stop() {
+  digitalWrite(motor1pin1, LOW);
+  digitalWrite(motor1pin2, LOW);
+  digitalWrite(motor2pin1, LOW);
+  digitalWrite(motor2pin2, LOW);
+}
