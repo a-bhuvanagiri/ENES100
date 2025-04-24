@@ -24,6 +24,8 @@ south: 0
 */
 
 //orientation
+#define CYCLE 0
+int signalPin = 1;
 Servo servo;
 float north = 3.14;
 float east = 1.57;
