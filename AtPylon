@@ -88,6 +88,16 @@ void loop()
     drive('s');
     Enes100.println("I am at the pylon and have stopped.");
     delay(100000);
+
+    //CODE TO MOVE RACK AND PINION DOWN
+    servo.write(95);
+    delay(3000);
+    servo.write(90);
+    delay(3000);
+    servo.write(85);
+    delay(3000);
+
+  
   }
   
 
@@ -120,6 +130,14 @@ void loop()
     drive('s');
     Enes100.println("I am at the pylon and have stopped.");
     delay(100000);
+
+    //CODE TO MOVE RACK AND PINION DOWN
+    servo.write(95);
+    delay(3000);
+    servo.write(90);
+    delay(3000);
+    servo.write(85);
+    delay(3000);
   }
 
   //drive east
