@@ -103,6 +103,45 @@ void loop()
     servo.write(85);
     delay(3000);
 
+    //CODE FOR DUTY CYCLE
+    unsigned long highTime = pulseIn(signalPin, HIGH);  // Measure high time of the pulse
+    unsigned long lowTime = pulseIn(signalPin, LOW);    // Measure low time of the pulse
+
+  if (highTime > 0 && lowTime > 0) {
+    // Calculate the duty cycle as a percentage
+    float dutyCycle = (float)highTime / (highTime + lowTime) * 100.0;
+    
+
+
+    // Round the duty cycle to the nearest 10% (as specified)
+    int roundedDuty;
+    if (dutyCycle < 20) {
+      roundedDuty = 10;  // If the duty cycle is less than 20%, round it to 10%
+    } else if (dutyCycle < 40) {
+      roundedDuty = 30;  // If the duty cycle is between 20% and 40%, round it to 30%
+    } else if (dutyCycle < 60) {
+      roundedDuty = 50;  // If the duty cycle is between 40% and 60%, round it to 50%
+    } else if (dutyCycle < 80) {
+      roundedDuty = 70;  // If the duty cycle is between 60% and 80%, round it to 70%
+    } else {
+      roundedDuty = 90;  // If the duty cycle is greater than 80%, round it to 90%
+    }
+
+    // Transmit the rounded duty cycle to Enes100
+   
+    Enes100.mission(CYCLE,100-roundedDuty);
+
+    // Debugging output for monitoring duty cycle
+    Enes100.print("Duty Cycle: ");
+    Enes100.print(100 - dutyCycle);
+    Enes100.print("%, Rounded Duty: ");
+    Enes100.println(100- roundedDuty);
+  }
+
+  // Delay for a short period before reading again
+  delay(2000000);  // 2-second delay between readings
+
+
   
   }
   
@@ -146,6 +185,43 @@ void loop()
     delay(3000);
   }
 
+  //CODE FOR DUTY CYCLE
+    unsigned long highTime = pulseIn(signalPin, HIGH);  // Measure high time of the pulse
+    unsigned long lowTime = pulseIn(signalPin, LOW);    // Measure low time of the pulse
+
+  if (highTime > 0 && lowTime > 0) {
+    // Calculate the duty cycle as a percentage
+    float dutyCycle = (float)highTime / (highTime + lowTime) * 100.0;
+    
+
+
+    // Round the duty cycle to the nearest 10% (as specified)
+    int roundedDuty;
+    if (dutyCycle < 20) {
+      roundedDuty = 10;  // If the duty cycle is less than 20%, round it to 10%
+    } else if (dutyCycle < 40) {
+      roundedDuty = 30;  // If the duty cycle is between 20% and 40%, round it to 30%
+    } else if (dutyCycle < 60) {
+      roundedDuty = 50;  // If the duty cycle is between 40% and 60%, round it to 50%
+    } else if (dutyCycle < 80) {
+      roundedDuty = 70;  // If the duty cycle is between 60% and 80%, round it to 70%
+    } else {
+      roundedDuty = 90;  // If the duty cycle is greater than 80%, round it to 90%
+    }
+
+    // Transmit the rounded duty cycle to Enes100
+   
+    Enes100.mission(CYCLE,100-roundedDuty);
+
+    // Debugging output for monitoring duty cycle
+    Enes100.print("Duty Cycle: ");
+    Enes100.print(100 - dutyCycle);
+    Enes100.print("%, Rounded Duty: ");
+    Enes100.println(100- roundedDuty);
+  }
+
+  // Delay for a short period before reading again
+  delay(2000000);  // 2-second delay between readings
   //drive east
   
 }
