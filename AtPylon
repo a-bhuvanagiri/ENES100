@@ -23,10 +23,14 @@ south: 0
 
 */
 
-//orientation
+
 #define CYCLE 0
 int signalPin = 1;
+#define hallPin A0 
 Servo servo;
+
+//orientation
+
 float north = 3.14;
 float east = 1.57;
 float south = 0;
@@ -61,6 +65,10 @@ void setup() {
 
   //servo
   servo.attach(11); 
+
+  //MAGNET
+  pinMode(hallPin, INPUT);
+
 }
 
 void loop()  
