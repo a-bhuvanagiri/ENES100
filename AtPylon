@@ -43,6 +43,12 @@ int motor1pin2 = 3;
 int motor2pin1 = 4;
 int motor2pin2 = 5;
 
+//logic
+bool missionDone = false;
+
+//timing
+float ninetyTime = 5000;
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -160,6 +166,13 @@ void loop()
         Serial.println("No magnetic field detected.");
       }
       delay(200000);
+
+//perform mission sequence
+    missionDone = true;
+    drive('b');
+    delay(5000);
+    drive('l');
+    delay(ninetyTime);
     }
 
 
@@ -256,9 +269,18 @@ void loop()
         Serial.println("No magnetic field detected.");
       }
       delay(200000);
+
+ //perform mission sequence
+    missionDone = true;
+    drive('b');
+    delay(5000);
+    drive('r');
+    delay(ninetyTime);
     }
 
-
+  //drive east
+  if(missionDone){
+    drive('f');
 
 void drive(char input) {
   analogWrite(9, 255); //ENA   pin
