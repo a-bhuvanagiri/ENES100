@@ -41,6 +41,7 @@ int motor2pin2 = 5;
 
 void setup() {
   // put your setup code here, to run once:
+
   Enes100.begin("Sabine's Carpenters", DATA, 345, 1116, 12, 13);
   Enes100.print("Working as intended.");
 
@@ -54,6 +55,9 @@ void setup() {
   pinMode(10, OUTPUT);
   //(Optional)
   Serial.begin(9600); 
+
+  //duty cycle
+  pinMode(signalPin, INPUT);
 
   //servo
   servo.attach(11); 
