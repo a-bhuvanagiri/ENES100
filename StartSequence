@@ -34,9 +34,15 @@ int motor1pin2 = 3;
 int motor2pin1 = 4;
 int motor2pin2 = 5;
 
+//logic
+bool missionDone = false;
+
+//timing
+float ninetyTime = 5000;
+
 void setup() {
   // put your setup code here, to run once:
-  Enes100.begin("Sabine's Carpenters", DATA, 345, 1116, 12, 13);
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
   Enes100.print("Working as intended.");
 
   pinMode(motor1pin1, OUTPUT);
@@ -54,7 +60,7 @@ void setup() {
 void loop()  
 {  
   //case for start pos a:
-  if(Enes100.getY() > 1){
+  if((Enes100.getY() > 1) && !missionDone){
     Enes100.println("In position A.");
     while((fabs(Enes100.getTheta()) > 0.2)){
       drive('r');
@@ -82,11 +88,16 @@ void loop()
     drive('s');
     Enes100.println("I am at the pylon and have stopped.");
     delay(100000);
-  }
-  
 
+    //perform mission sequence
+    missionDone = true;
+    drive('b');
+    delay(5000);
+    drive('l');
+    delay(ninetyTime);
+  }
   //case for start pos b:
-  else{
+  else if((Enes100.getY() < 1) && (Enes100.getY() > 0)  && !missionDone){
     Enes100.println("In position B.");
     while((fabs(Enes100.getTheta()) < 2.8) || (Enes100.getTheta() == -1)){
       drive('l');
@@ -114,10 +125,21 @@ void loop()
     drive('s');
     Enes100.println("I am at the pylon and have stopped.");
     delay(100000);
+
+    //perform mission sequence
+    missionDone = true;
+    drive('b');
+    delay(5000);
+    drive('r');
+    delay(ninetyTime);
   }
 
   //drive east
+  if(missionDone){
+    drive('f');
+  }
   
+  //drive forward for rest of time
 }
 
 
