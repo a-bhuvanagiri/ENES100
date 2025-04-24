@@ -1,1 +1,169 @@
+#include "Enes100.h"
+#include <Servo.h>
 
+//from ENES100 website: Boards have limitations around what pins can be connected to Wi-Fi module TX. Allowed Pins: Uno - every digital pin excluding 0,1,13
+
+/*
+
+Enes100.getX()
+Enes100.getY()
+Enes100.getTheta()
+Enes100.isVisible()
+Enes100.print("to print")
+
+x: x-coordinate of the Aruco Marker (from 0.0 to 4.0)
+y: y-coordinate of the Aruco Marker (From 0.0 to 2.0)
+theta: angle of the Aruco Marker (from -pi radians to pi radians)
+visibility: whether the ArUco marker is visible (true or false)
+
+east: pi/2
+north: pi
+west: -pi/2
+south: 0
+
+*/
+
+//orientation
+Servo servo;
+float north = 3.14;
+float east = 1.57;
+float south = 0;
+float west = -1.57;
+
+// Tank control
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+void setup() {
+  // put your setup code here, to run once:
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1116, 12, 13);
+  Enes100.print("Working as intended.");
+
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+
+  //(Optional)
+  pinMode(9,  OUTPUT); 
+  pinMode(10, OUTPUT);
+  //(Optional)
+  Serial.begin(9600); 
+
+  //servo
+  servo.attach(11); 
+}
+
+void loop()  
+{  
+  //case for start pos a:
+  if(Enes100.getY() > 1){
+    Enes100.println("In position A.");
+    while((fabs(Enes100.getTheta()) > 0.2)){
+      drive('r');
+    }
+
+    Enes100.println("Let's get more precise");
+    while(fabs(Enes100.getTheta()) > 0.015){
+      Enes100.println(Enes100.getTheta());
+      drive('r');
+      delay(50);
+      drive('s');
+      delay(150);
+    }
+    Enes100.println("Facing south");
+
+
+    int a;
+    a=analogRead(A1); 
+    while(a > 100){
+      drive('f');
+      a=analogRead(A1); 
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+    delay(100000);
+  }
+  
+
+  //case for start pos b:
+  else{
+    Enes100.println("In position B.");
+    while((fabs(Enes100.getTheta()) < 2.8) || (Enes100.getTheta() == -1)){
+      drive('l');
+    }
+
+    Enes100.println("Let's get more precise");
+    while((fabs(Enes100.getTheta()) < 3.11) || (Enes100.getTheta() == -1)) {
+      Enes100.println(Enes100.getTheta());
+      drive('l');
+      delay(50);
+      drive('s');
+      delay(150);
+    }
+    Enes100.println("Facing north");
+
+
+    int a;
+    a=analogRead(A1); 
+    while(a > 100){
+      drive('f');
+      a=analogRead(A1); 
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+    delay(100000);
+  }
+
+  //drive east
+  
+}
+
+
+void drive(char input) {
+  analogWrite(9, 255); //ENA   pin
+  analogWrite(10, 255); //ENB pin
+  switch (input) {
+    case 'f': // Move forward
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+      
+    case 'b': // Move backward
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+      
+    case 'r': // Turn right
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+      
+    case 'l': // Turn left
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+      
+    case 's': // Turn left
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+      break;
+  }
+}
