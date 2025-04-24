@@ -164,7 +164,6 @@ void loop()
 
 
   
-  }
   
 
   //case for start pos b:
@@ -258,7 +257,7 @@ void loop()
       }
       delay(200000);
     }
-}
+
 
 
 void drive(char input) {
