@@ -1,0 +1,186 @@
+#include "Enes100.h"
+//from ENES100 website: Boards have limitations around what pins can be connected to Wi-Fi module TX. Allowed Pins: Uno - every digital pin excluding 0,1,13
+
+/*
+
+Enes100.getX()
+Enes100.getY()
+Enes100.getTheta()
+Enes100.isVisible()
+Enes100.print("to print")
+
+x: x-coordinate of the Aruco Marker (from 0.0 to 4.0)
+y: y-coordinate of the Aruco Marker (From 0.0 to 2.0)
+theta: angle of the Aruco Marker (from -pi radians to pi radians)
+visibility: whether the ArUco marker is visible (true or false)
+
+east: pi/2
+north: pi
+west: -pi/2
+south: 0
+
+*/
+
+//orientation
+float north = 3.14;
+float east = 1.57;
+float south = 0;
+float west = -1.57;
+
+// Tank control
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+
+void setup() {
+  // put your setup code here, to run once:
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
+  Enes100.print("Working as intended.");
+
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+
+  //(Optional)
+  pinMode(9,  OUTPUT); 
+  pinMode(10, OUTPUT);
+  //(Optional)
+  Serial.begin(9600); 
+}
+
+void loop()  
+{  
+  
+  face('n');
+  Enes100.println("Facing North");
+  face('s');
+  Enes100.println("Facing South");
+  face('e');
+  Enes100.println("Facing East");
+  face('w');
+  Enes100.println("Facing West");
+  //drive forward for rest of time
+}
+
+
+void drive(char input) {
+  analogWrite(9, 255); //ENA   pin
+  analogWrite(10, 255); //ENB pin
+  switch (input) {
+    case 'f': // Move forward
+    
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+      
+    case 'b': // Move backward
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+      
+    case 'r': // Turn right
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+      
+    case 'l': // Turn left
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+      
+    case 's': // Turn left
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+      break;
+  }
+}
+
+/*
+east: pi/2
+north: pi
+west: -pi/2
+south: 0
+*/
+
+void face(char input) {
+  switch (input) {
+    case 's': // Face north
+      while(Enes100.getTheta() == -1){
+        delay(1);
+      }
+      if(Enes100.getTheta() < 0){
+        while((Enes100.getTheta() < -0.05) || (Enes100.getTheta() > 0.05)){
+          drive('l');
+        }
+      }
+      else if(Enes100.getTheta() > 0){
+        while((Enes100.getTheta() < -0.05) || (Enes100.getTheta() > 0.05)){
+          drive('r');
+        }
+      }
+      break;
+      
+    case 'n': // Face south
+      while(Enes100.getTheta() == -1){
+        delay(1);
+      }
+      if(Enes100.getTheta() < 0){
+        while((Enes100.getTheta() > -3.08) || (Enes100.getTheta() == -1)){
+          drive('r');
+        }
+      }
+      else if(Enes100.getTheta() > 0){
+        while((Enes100.getTheta() < 3.08) || (Enes100.getTheta() == -1)){
+          drive('l');
+        }
+      }
+      break;
+      
+    case 'e': // Face east
+      while(Enes100.getTheta() == -1){
+        delay(1);
+      }
+      if((Enes100.getTheta() > 1.57) || (Enes100.getTheta() < -1.57)){
+        while(!((Enes100.getTheta() > 1.52) && (Enes100.getTheta() < 1.62))){
+          drive('r');
+        }
+      }
+      else{
+        while(!((Enes100.getTheta() > 1.52) && (Enes100.getTheta() < 1.62))){
+          drive('l');
+        }
+      }
+      break;
+      
+    case 'w': // Face west
+      while(Enes100.getTheta() == -1){
+        delay(1);
+      }
+      if((Enes100.getTheta() > 1.57) || (Enes100.getTheta() < -1.57)){
+        while(!((Enes100.getTheta() < -1.52) && (Enes100.getTheta() > -1.62))){
+          drive('l');
+        }
+      }
+      else{
+        while(!((Enes100.getTheta() < -1.52) && (Enes100.getTheta() > -1.68))){
+          drive('r');
+        }
+      }
+      break;
+
+  }
+}
