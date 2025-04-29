@@ -1,35 +1,11 @@
-#include "Arduino.h"
-#include "Enes100.h"
-
-// Pin definitions
-int trigPin = 6;    
-int echoPin = 7;    
-int motor1pin1 = 2;
-int motor1pin2 = 3;
-int motor2pin1 = 4;
-int motor2pin2 = 5;
-
-// Variables for ultrasonic sensor
-long duration;
-float cm;
-
-// Navigation variables
-int state = 0;   // 0 = center, 1 = left tried, 2 = right tried
-bool destinationReached = false;
-float targetX = 3.5;  // Goal is near the right side of the arena
-float targetY = 1.0;  // Middle of the arena height-wise
-float positionTolerance = 0.01; // How close we need to be to consider "at position"
-
-// Boundary positions
-float leftBoundary = 0.2;  // Far left position (x-coordinate)
-float rightBoundary = 3.8; // Far right position (x-coordinate)
-
-// Movement control constants
 int normalSpeed = 200;
 int turnSpeed = 150;
 
 void setup() {
   Serial.begin(9600);
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1116, 12, 13);
+  Enes100.print("Working as intended.");
+
   
   // Initialize Enes100 vision system
   Enes100.begin("Sabine's Carpenters", DATA, 11, 1120, 12, 13);
@@ -256,3 +232,4 @@ void stop() {
   digitalWrite(motor2pin1, LOW);
   digitalWrite(motor2pin2, LOW);
 }
+
