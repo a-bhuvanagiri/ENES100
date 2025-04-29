@@ -1,0 +1,242 @@
+#include "Enes100.h"
+#include <Servo.h>
+
+//from ENES100 website: Boards have limitations around what pins can be connected to Wi-Fi module TX. Allowed Pins: Uno - every digital pin excluding 0,1,13
+
+/*
+
+Enes100.getX()
+Enes100.getY()
+Enes100.getTheta()
+Enes100.isVisible()
+Enes100.print("to print")
+
+x: x-coordinate of the Aruco Marker (from 0.0 to 4.0)
+y: y-coordinate of the Aruco Marker (From 0.0 to 2.0)
+theta: angle of the Aruco Marker (from -pi radians to pi radians)
+visibility: whether the ArUco marker is visible (true or false)
+
+east: pi/2
+north: pi
+west: -pi/2
+south: 0
+
+*/
+
+
+#define CYCLE 0
+int signalPin = 1;
+#define hallPin A0 
+Servo servo;
+
+//orientation
+
+float north = 3.14;
+float east = 1.57;
+float south = 0;
+float west = -1.57;
+
+// Tank control
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+//logic
+bool missionDone = false;
+
+//timing
+float ninetyTime = 5000;
+
+void setup() {
+  // put your setup code here, to run once:
+
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
+  Enes100.print("Working as intended.");
+
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+
+  //(Optional)
+  pinMode(9,  OUTPUT); 
+  pinMode(10, OUTPUT);
+  //(Optional)
+  Serial.begin(9600); 
+
+  //duty cycle
+  pinMode(signalPin, INPUT);
+
+  //servo
+  servo.attach(11); 
+
+  //MAGNET
+  pinMode(hallPin, INPUT);
+
+}
+
+
+  void loop() {
+  static bool missionStarted = false;  // Tracks if mission phase has begun
+
+  // -------- POSITION A --------
+  if ((Enes100.getY() > 1) && !missionDone && !missionStarted) {
+    Enes100.println("In position A.");
+
+    while (fabs(Enes100.getTheta()) > 0.2) {
+      drive('r');
+    }
+
+    Enes100.println("Let's get more precise");
+    while (fabs(Enes100.getTheta()) > 0.015) {
+      Enes100.println(Enes100.getTheta());
+      drive('r');
+      delay(50);
+      drive('s');
+      delay(150);
+    }
+
+    Enes100.println("Facing south");
+
+    int a = analogRead(A1);
+    while (a > 100) {
+      drive('f');
+      a = analogRead(A1);
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+
+    missionStarted = true;  // Ready for mission logic
+  }
+
+  // -------- POSITION B --------
+  else if ((Enes100.getY() < 1) && (Enes100.getY() > 0) && !missionDone && !missionStarted) {
+    Enes100.println("In position B.");
+
+    while ((fabs(Enes100.getTheta()) < 2.8) || (Enes100.getTheta() == -1)) {
+      drive('l');
+    }
+
+    Enes100.println("Let's get more precise");
+    while ((fabs(Enes100.getTheta()) < 3.11) || (Enes100.getTheta() == -1)) {
+      Enes100.println(Enes100.getTheta());
+      drive('l');
+      delay(50);
+      drive('s');
+      delay(150);
+    }
+
+    Enes100.println("Facing north");
+
+    int a = analogRead(A1);
+    while (a > 100) {
+      drive('f');
+      a = analogRead(A1);
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+
+    missionStarted = true;  // Ready for mission logic
+  }
+
+  // -------- MISSION EXECUTION --------
+  if (missionStarted && !missionDone) {
+    Enes100.println("Beginning mission sequence...");
+
+    // Move rack and pinion down
+    servo.write(95); delay(3000);
+    servo.write(90); delay(3000);
+    servo.write(85); delay(3000);
+
+    // Measure duty cycle
+    unsigned long highTime = pulseIn(signalPin, HIGH);
+    unsigned long lowTime = pulseIn(signalPin, LOW);
+
+    if (highTime > 0 && lowTime > 0) {
+      float dutyCycle = (float)highTime / (highTime + lowTime) * 100.0;
+      int roundedDuty;
+
+      if (dutyCycle < 20) roundedDuty = 10;
+      else if (dutyCycle < 40) roundedDuty = 30;
+      else if (dutyCycle < 60) roundedDuty = 50;
+      else if (dutyCycle < 80) roundedDuty = 70;
+      else roundedDuty = 90;
+
+      Enes100.mission(CYCLE, 100 - roundedDuty);
+
+      Enes100.print("Duty Cycle: ");
+      Enes100.print(100 - dutyCycle);
+      Enes100.print("%, Rounded Duty: ");
+      Enes100.println(100 - roundedDuty);
+    }
+
+    // Read magnetic sensor
+    float sensorValue = analogRead(hallPin);
+    Serial.print("Magnetic Sensor Value: ");
+    Serial.println(sensorValue);
+
+    if (sensorValue < 1000) {
+      Serial.println("Magnetic field detected!");
+    } else {
+      Serial.println("No magnetic field detected.");
+    }
+
+    // Retreat and turn
+    drive('b'); delay(5000);
+    drive((Enes100.getY() > 1) ? 'l' : 'r');  // Turn differently based on starting position
+    delay(ninetyTime);
+    drive('f');
+
+    missionDone = true;
+  }
+}
+
+
+
+
+void drive(char input) {
+  analogWrite(9, 255); //ENA   pin
+  analogWrite(10, 255); //ENB pin
+  switch (input) {
+    case 'f': // Move forward
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+      
+    case 'b': // Move backward
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+      
+    case 'r': // Turn right
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+      
+    case 'l': // Turn left
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+      
+    case 's': // Turn left
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+      break;
+  }
+}
