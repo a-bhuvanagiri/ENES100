@@ -75,25 +75,23 @@ void loop() {
 
     Enes100.println("Facing south");
 
-    int a = analogRead(A1);
-    while (a > 100) {
-        drive('f');
-  delay(100); // small delay to avoid overshooting
-  drive('s'); // stop briefly
-  delay(50);
-  a = analogRead(A1);
+     int a;
+    a=analogRead(A1); 
+    Serial.println(a); 
 
-    }
+    drive('f');
 
-    drive('s'); delay(500);  // Let it settle
-    a = analogRead(A1);      // Double-check proximity
-
-    if (a < 100) {
+    if(a < 100){
+      delay(100);
+      drive('s');
       Enes100.println("Pylon confirmed at position A. Preparing to lower servo...");
-      lowerServo();
       missionStarted = true;
       reachedPylon = true;
+      while (!servoLowered){
+        lowerServo();
     }
+  }
+  
   }
 
   // -------- POSITION B --------
@@ -117,26 +115,26 @@ void loop() {
 
     Enes100.println("Facing north");
 
-    int a = analogRead(A1);
-    while (a > 100) {
-        drive('f');
-  delay(100); // small delay to avoid overshooting
-  drive('s'); // stop briefly
-  delay(50);
-  a = analogRead(A1);
 
-    }
 
-    drive('s'); delay(500);  // Let it settle
-    a = analogRead(A1);      // Double-check
+    int a;
+    a=analogRead(A1); 
+    Serial.println(a); 
 
-    if (a < 100) {
+    drive('f');
+    
+    if(a < 100){
+      delay(100);
+      drive('s');
       Enes100.println("Pylon confirmed at position B. Preparing to lower servo...");
-      lowerServo();
       missionStarted = true;
       reachedPylon = true;
+      while (!servoLowered){}
+        lowerServo();
     }
+  
   }
+
 
   // -------- MISSION EXECUTION --------
   if (missionStarted && reachedPylon && !missionDone) {
@@ -223,8 +221,11 @@ void drive(char input) {
 
 // -------- SERVO CONTROL --------
 void lowerServo() {
-  servo.write(95); delay(1000);
-  servo.write(90); delay(1000);
-  servo.write(85); delay(1000);
+  servo.write(95);
+  delay(3000);
+  servo.write(90);
+  delay(3000);
+  servo.write(85);
+  delay(3000);
   servoLowered = true;
 }
