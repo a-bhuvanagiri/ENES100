@@ -1,0 +1,81 @@
+#include <Servo.h>
+#include "Enes100.h"
+
+Servo servo;
+
+// Pins
+int signalPin = 1;         // PWM input pin
+int hallPin = A0;          // Hall effect sensor analog pin
+
+// Team info
+const char* teamName = "Sabine's Carpenters";
+int teamMarker = 345;
+
+#define CYCLE 0
+
+void setup() {
+  // Initialize Enes100 communication
+  Enes100.begin(teamName, DATA, 345, 1116, 12, 13);
+  Enes100.println("Connected...");
+
+  // Initialize serial for debug
+  Serial.begin(9600);
+
+  // Initialize servo
+  servo.attach(11);
+
+  // Set pin modes
+  pinMode(signalPin, INPUT);
+  pinMode(hallPin, INPUT);
+}
+
+void loop() {
+  // --- 1. Lower the servo in steps ---
+  servo.write(95);
+  delay(3000);
+  servo.write(90);
+  delay(3000);
+  servo.write(85);
+  delay(3000);
+
+  // --- 2. Read Hall sensor ---
+  float sensorValue = analogRead(hallPin);
+  Enes100.print("Magnetic sensor value: ");
+  Enes100.println(sensorValue);
+
+  if (sensorValue < 1000) {
+    Enes100.println("Magnetic field detected.");
+  } else {
+    Enes100.println("No magnetic field detected.");
+  }
+
+  // --- 3. Measure PWM and report duty cycle ---
+  unsigned long highTime = pulseIn(signalPin, HIGH);
+  unsigned long lowTime = pulseIn(signalPin, LOW);
+
+  if (highTime > 0 && lowTime > 0) {
+    float dutyCycle = (float)highTime / (highTime + lowTime) * 100.0;
+
+    int roundedDuty;
+    if (dutyCycle < 20) {
+      roundedDuty = 10;
+    } else if (dutyCycle < 40) {
+      roundedDuty = 30;
+    } else if (dutyCycle < 60) {
+      roundedDuty = 50;
+    } else if (dutyCycle < 80) {
+      roundedDuty = 70;
+    } else {
+      roundedDuty = 90;
+    }
+
+    Enes100.mission(CYCLE, 100 - roundedDuty);
+
+    Enes100.print("Duty Cycle: ");
+    Enes100.print(100 - dutyCycle);
+    Enes100.print("%, Rounded Duty: ");
+    Enes100.println(100 - roundedDuty);
+  }
+
+  delay(2000);  // Delay before repeating loop
+}
