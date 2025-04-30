@@ -1,0 +1,106 @@
+#ifndef NAV_FUNCTIONS_H
+#define NAV_FUNCTIONS_H
+
+#include <Arduino.h>
+#include "Enes100.h"
+
+// Extern so motor pins can be accessed from main.ino
+extern int motor1pin1;
+extern int motor1pin2;
+extern int motor2pin1;
+extern int motor2pin2;
+
+void drive(char input) {
+  analogWrite(9, 255);
+  analogWrite(10, 255);
+
+  switch (input) {
+    case 'f':
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+    case 'b':
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+    case 'r':
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+    case 'l':
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+    case 's':
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+      break;
+  }
+}
+
+void face(char input) {
+  while (Enes100.getTheta() == -1) delay(1);
+  float theta = Enes100.getTheta();
+
+  switch (input) {
+    case 's':
+      if (theta < 0) {
+        while ((theta < -0.06) || (theta > 0.06)) {
+          drive('l'); theta = Enes100.getTheta();
+        }
+      } else {
+        while ((theta < -0.06) || (theta > 0.06)) {
+          drive('r'); theta = Enes100.getTheta();
+        }
+      }
+      break;
+
+    case 'n':
+      if (theta < 0) {
+        while ((theta > -3.07) || (theta == -1)) {
+          drive('r'); theta = Enes100.getTheta();
+        }
+      } else {
+        while ((theta < 3.07) || (theta == -1)) {
+          drive('l'); theta = Enes100.getTheta();
+        }
+      }
+      break;
+
+    case 'e':
+      if ((theta > 1.57) || (theta < -1.57)) {
+        while (!((theta > 1.51) && (theta < 1.63))) {
+          drive('r'); theta = Enes100.getTheta();
+        }
+      } else {
+        while (!((theta > 1.51) && (theta < 1.63))) {
+          drive('l'); theta = Enes100.getTheta();
+        }
+      }
+      break;
+
+    case 'w':
+      if ((theta > 1.57) || (theta < -1.57)) {
+        while (!((theta < -1.51) && (theta > -1.63))) {
+          drive('l'); theta = Enes100.getTheta();
+        }
+      } else {
+        while (!((theta < -1.51) && (theta > -1.63))) {
+          drive('r'); theta = Enes100.getTheta();
+        }
+      }
+      break;
+  }
+}
+
+#endif
