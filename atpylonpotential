@@ -24,12 +24,12 @@ int motor2pin2 = 5;
 bool missionDone = false;
 bool missionStarted = false;
 bool reachedPylon = false;
-bool servoLowered = false;  // Added flag to track servo state
+bool servoLowered = false;
 
 float ninetyTime = 5000;
 
 void setup() {
-  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1116, 12, 13);
   Enes100.print("Working as intended.");
 
   pinMode(motor1pin1, OUTPUT);
@@ -71,25 +71,29 @@ void loop() {
     drive('s'); delay(200);
 
     Enes100.println("Refining south alignment...");
-    while (fabs(theta) > 0.015) {
-      drive('r'); delay(50);
-      drive('s'); delay(150);
-      theta = Enes100.getTheta();
-    }
+    
 
     Enes100.println("Facing south");
 
     int a = analogRead(A1);
     while (a > 100) {
-      drive('f');
-      a = analogRead(A1);
+        drive('f');
+  delay(100); // small delay to avoid overshooting
+  drive('s'); // stop briefly
+  delay(50);
+  a = analogRead(A1);
+
     }
 
-    drive('s'); delay(1000);
-    Enes100.println("Reached pylon at position A.");
-    
-    missionStarted = true;
-    reachedPylon = true;
+    drive('s'); delay(500);  // Let it settle
+    a = analogRead(A1);      // Double-check proximity
+
+    if (a < 100) {
+      Enes100.println("Pylon confirmed at position A. Preparing to lower servo...");
+      lowerServo();
+      missionStarted = true;
+      reachedPylon = true;
+    }
   }
 
   // -------- POSITION B --------
@@ -115,15 +119,23 @@ void loop() {
 
     int a = analogRead(A1);
     while (a > 100) {
-      drive('f');
-      a = analogRead(A1);
+        drive('f');
+  delay(100); // small delay to avoid overshooting
+  drive('s'); // stop briefly
+  delay(50);
+  a = analogRead(A1);
+
     }
 
-    drive('s'); delay(1000);
-    Enes100.println("Reached pylon at position B.");
+    drive('s'); delay(500);  // Let it settle
+    a = analogRead(A1);      // Double-check
 
-    missionStarted = true;
-    reachedPylon = true;
+    if (a < 100) {
+      Enes100.println("Pylon confirmed at position B. Preparing to lower servo...");
+      lowerServo();
+      missionStarted = true;
+      reachedPylon = true;
+    }
   }
 
   // -------- MISSION EXECUTION --------
@@ -132,15 +144,6 @@ void loop() {
     drive('s');
     delay(500);
 
-    // Now that the IR sensor has detected the pylon, lower the rack and pinion
-    Enes100.println("Pylon detected - lowering servo mechanism...");
-    
-    // Lower rack and pinion gradually
-    servo.write(95); delay(1000);
-    servo.write(90); delay(1000);
-    servo.write(85); delay(1000);
-    servoLowered = true;
-    
     // Measure duty cycle
     unsigned long highTime = pulseIn(signalPin, HIGH);
     unsigned long lowTime = pulseIn(signalPin, LOW);
@@ -179,7 +182,7 @@ void loop() {
   }
 }
 
-// Motor control
+// -------- MOTOR CONTROL --------
 void drive(char input) {
   analogWrite(9, 255);
   analogWrite(10, 255);
@@ -216,4 +219,12 @@ void drive(char input) {
       digitalWrite(motor2pin2, LOW);
       break;
   }
+}
+
+// -------- SERVO CONTROL --------
+void lowerServo() {
+  servo.write(95); delay(1000);
+  servo.write(90); delay(1000);
+  servo.write(85); delay(1000);
+  servoLowered = true;
 }
