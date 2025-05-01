@@ -28,11 +28,6 @@ float duration_us, distance_cm;
 
 
 
-
-
-
-
-
 // Constants adjusted based on testing
 float missionColUp = 0.46;
 float missionColDown = 0.25;
@@ -45,8 +40,6 @@ float forwardAdjustPercent = 0.90;
 float turnSpeed = 70;
 
 
-
-
 // State dictates what case to run
 // Cases are as follows: mission 0, firstCol 1, secondCol 2, openZone 3
 int state;
@@ -55,8 +48,6 @@ int state;
 
 
 bool temp = true;
-
-
 
 
 void setup() {
@@ -74,16 +65,11 @@ void setup() {
 
 
 
-
-
-
     // Initialize state and start with motors off
     Enes100.println("Starting driving");
     state = 0;
     turnOffMotors();
 }
-
-
 
 
 void loop() {
