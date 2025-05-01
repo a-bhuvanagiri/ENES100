@@ -61,7 +61,7 @@ bool temp = true;
 
 void setup() {
     Serial.begin(9600);
-    Enes100.begin("Data", DATA, 333, 1116, 12, 13);
+    Enes100.begin("Data", DATA, 345, 1116, 12, 13);
   
    
     // Ultrasonic
