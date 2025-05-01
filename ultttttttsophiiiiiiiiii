@@ -11,8 +11,8 @@ const int IN2 = 3;
 const int IN3 = 4;
 const int IN4 = 5;
 // PWM pins
-const int ENA = 255; // right
-const int ENB = 255; // left
+const int ENA = 9; // right
+const int ENB = 10; // left
 
 
 
@@ -52,7 +52,7 @@ bool temp = true;
 
 void setup() {
     Serial.begin(9600);
-    Enes100.begin("Data", DATA, 345, 1116, 12, 13);
+    Enes100.begin("Data", DATA, 345, 1120, 12, 13);
   
    
     // Ultrasonic
