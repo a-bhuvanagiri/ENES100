@@ -1,0 +1,196 @@
+#include <Servo.h>
+#include "Enes100.h"
+
+// Team info
+const char* teamName = "Sabine's Carpenters";
+
+// Orientation constants
+float north = 3.14;
+float east = 1.57;
+float south = 0;
+float west = -1.57;
+
+// Tank control pins
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+// Timing
+float ninetyTime = 5000;
+
+// Logic
+bool missionDone = false;
+
+// Servo and sensor
+Servo servo;
+int signalPin = 1;         // PWM input pin
+int hallPin = A0;          // Hall effect sensor analog pin
+#define CYCLE 0
+
+void setup() {
+  Enes100.begin(teamName, DATA, 345, 1120, 12, 13);
+  Enes100.print("Working as intended.");
+
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(signalPin, INPUT);
+  pinMode(hallPin, INPUT);
+
+  servo.attach(11);
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  if ((Enes100.getY() > 1) && !missionDone) {
+    Enes100.println("In position A.");
+    while (fabs(Enes100.getTheta()) > 0.2) drive('r');
+
+    Enes100.println("Let's get more precise");
+    while (fabs(Enes100.getTheta()) > 0.015) {
+      Enes100.println(Enes100.getTheta());
+      drive('r');
+      delay(50);
+      drive('s');
+      delay(150);
+    }
+    Enes100.println("Facing south");
+
+    int a = analogRead(A1);
+    while (a > 100) {
+      drive('f');
+      a = analogRead(A1);
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+    delay(1000);  // short pause
+
+    performMission();  // <== Added
+
+    missionDone = true;
+    drive('b');
+    delay(5000);
+    drive('l');
+    delay(ninetyTime);
+  }
+
+  else if ((Enes100.getY() < 1) && (Enes100.getY() > 0) && !missionDone) {
+    Enes100.println("In position B.");
+    while ((fabs(Enes100.getTheta()) < 2.8) || (Enes100.getTheta() == -1)) drive('l');
+
+    Enes100.println("Let's get more precise");
+    while ((fabs(Enes100.getTheta()) < 3.11) || (Enes100.getTheta() == -1)) {
+      Enes100.println(Enes100.getTheta());
+      drive('l');
+      delay(50);
+      drive('s');
+      delay(150);
+    }
+    Enes100.println("Facing north");
+
+    int a = analogRead(A1);
+    while (a > 100) {
+      drive('f');
+      a = analogRead(A1);
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+    delay(1000);  // short pause
+
+    performMission();  // <== Added
+
+    missionDone = true;
+    drive('b');
+    delay(5000);
+    drive('r');
+    delay(ninetyTime);
+  }
+
+  if (missionDone) {
+    drive('f');
+  }
+}
+
+// Movement function
+void drive(char input) {
+  analogWrite(9, 255);
+  analogWrite(10, 255);
+  switch (input) {
+    case 'f':
+      digitalWrite(motor1pin1, HIGH); digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);  digitalWrite(motor2pin2, HIGH);
+      break;
+    case 'b':
+      digitalWrite(motor1pin1, LOW); digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, HIGH); digitalWrite(motor2pin2, LOW);
+      break;
+    case 'r':
+      digitalWrite(motor1pin1, LOW); digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW); digitalWrite(motor2pin2, HIGH);
+      break;
+    case 'l':
+      digitalWrite(motor1pin1, HIGH); digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH); digitalWrite(motor2pin2, LOW);
+      break;
+    case 's':
+      digitalWrite(motor1pin1, LOW); digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW); digitalWrite(motor2pin2, LOW);
+      break;
+  }
+}
+
+// Mission function
+void performMission() {
+  // 1. Lower the servo in steps
+  servo.write(95);
+  delay(3000);
+  servo.write(90);
+  delay(3000);
+  servo.write(85);
+  delay(3000);
+
+  // 2. Read hall sensor
+  float sensorValue = analogRead(hallPin);
+  Enes100.print("Magnetic sensor value: ");
+  Enes100.println(sensorValue);
+
+  if (sensorValue < 1000) {
+    Enes100.println("Magnetic field detected.");
+  } else {
+    Enes100.println("No magnetic field detected.");
+  }
+
+  // 3. Measure PWM and report duty cycle
+  unsigned long highTime = pulseIn(signalPin, HIGH);
+  unsigned long lowTime = pulseIn(signalPin, LOW);
+
+  if (highTime > 0 && lowTime > 0) {
+    float dutyCycle = (float)highTime / (highTime + lowTime) * 100.0;
+
+    int roundedDuty;
+    if (dutyCycle < 20)       roundedDuty = 10;
+    else if (dutyCycle < 40)  roundedDuty = 30;
+    else if (dutyCycle < 60)  roundedDuty = 50;
+    else if (dutyCycle < 80)  roundedDuty = 70;
+    else                      roundedDuty = 90;
+
+    Enes100.mission(CYCLE, 100 - roundedDuty);
+
+    Enes100.print("Duty Cycle: ");
+    Enes100.print(100 - dutyCycle);
+    Enes100.print("%, Rounded Duty: ");
+    Enes100.println(100 - roundedDuty);
+  }
+
+  delay(2000);  // Optional pause before exit
+}
