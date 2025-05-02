@@ -1,0 +1,27 @@
+if(Enes100.getX() > 2.5){
+   if(Enes100.getY() > 1.2){
+    Enes100.println("Above Log");
+    drive('r');
+    delay(ninetyTime);
+    drive('f');
+    delay(14000);
+    drive('l');
+    delay(ninetyTime);
+    drive('f');
+    delay(10000);
+   }
+   if else(Enes100.getY() > 0.8){
+    Enes100.println("Above Log");
+    drive('r');
+    delay(ninetyTime);
+    drive('f');
+    delay(6000);
+    drive('l');
+    delay(ninetyTime);
+    drive('f');
+    delay(10000);
+   } else {
+    drive('f');
+    delay(10000);
+   }
+   }
