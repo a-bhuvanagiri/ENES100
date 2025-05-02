@@ -1,0 +1,97 @@
+#include "Enes100.h"
+#include "nav_functions.h"
+
+// Orientation constants
+float north = 3.14;
+float east = 1.57;
+float south = 0;
+float west = -1.57;
+
+// Motor pins
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+bool missionDone = false;
+
+void setup() {
+  Enes100.begin("Sabine's Carpenters", DATA, 333, 1120, 12, 13);
+  Enes100.print("Working as intended.");
+
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+
+  pinMode(9, OUTPUT); 
+  pinMode(10, OUTPUT);
+
+  Serial.begin(9600); 
+}
+
+void loop() {
+
+    //case for start pos a:
+  Enes100.println("Checking what position I am in.");
+  Enes100.println(avgY());
+  if((avgY() > 1) && (avgY() != -1)){
+    Enes100.println("In position A.");
+    face('s');
+    Enes100.println("Facing south");
+
+    int a;
+    a=analogRead(A1); 
+    while(a > 100){
+      drive('f');
+      a=analogRead(A1); 
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+    delay(5000);
+
+    //perform mission sequence
+    missionDone = true;
+    drive('b');
+    delay(5000);
+    face('e');
+  }
+  //case for start pos b:
+  else if((avgY() <= 1) && (avgY() != -1)){
+    Enes100.println("In position B.");
+    face('n');
+    Enes100.println("Facing north");
+
+
+    int a;
+    a=analogRead(A1); 
+    while(a > 100){
+      drive('f');
+      a=analogRead(A1); 
+    }
+
+    delay(200);
+    drive('s');
+    Enes100.println("I am at the pylon and have stopped.");
+    delay(5000);
+
+    //perform mission sequence
+    missionDone = true;
+
+    drive('b');
+    delay(5000);
+    face('e');
+    
+  }
+
+  //drive east
+  if(missionDone){
+    drive('f');
+    delay(100000);
+    Enes100.println("Driving forward until I am in the obstacle zone");
+  }
+  
+  //drive forward for rest of time
+}
