@@ -1,23 +1,39 @@
 #include "Enes100.h"
-// Motor pins
+#include <math.h>
+
+// === Orientation constants ===
+float north = 3.14;
+float east = 1.57;
+float south = 0;
+float west = -1.57;
+
+// === Motor control pins ===
 int motor1pin1 = 2;
 int motor1pin2 = 3;
 int motor2pin1 = 4;
 int motor2pin2 = 5;
 
-// Optional: Enable pins (if using PWM speed control)
+// === Optional PWM pins ===
 int ena = 9;
 int enb = 10;
 
-// Obstacle detection pin (ultrasonic analog input)
+// === Obstacle detection ===
 int sensorPin = A1;
+int threshold = 100;
 
-// Timing
-unsigned long ninetyTime = 5000; // Adjust for your turning speed
+// === Logic ===
+bool avoiding = false;
+float originalTheta = 0;
+float targetTheta = 0;
+float pi = 3.14;
 
 void setup() {
-Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
+  // Start ENES100 tracking
+  Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
+  Serial.begin(9600);
+  Enes100.print("Setup complete.");
 
+  // Set up motor pins
   pinMode(motor1pin1, OUTPUT);
   pinMode(motor1pin2, OUTPUT);
   pinMode(motor2pin1, OUTPUT);
@@ -25,56 +41,95 @@ Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
 
   pinMode(ena, OUTPUT);
   pinMode(enb, OUTPUT);
-
   analogWrite(ena, 255);
   analogWrite(enb, 255);
-
-  Serial.begin(9600);
 }
 
 void loop() {
   int distance = analogRead(sensorPin);
+  Serial.print("Distance: ");
   Serial.println(distance);
 
-  if (distance < 100) {
+  if (!avoiding && distance < threshold) {
     // Obstacle detected
     drive('s');
-    delay(300);
+    delay(200);
+    
+    avoiding = true;
+    originalTheta = Enes100.getTheta();
+    targetTheta = normalizeAngle(originalTheta + pi / 2); // Turn 90° left
+    Enes100.print("Turning left to avoid obstacle.");
+  }
 
-    // Turn left 90 degrees
-    drive('l');
-    delay(ninetyTime);
+  if (avoiding) {
+    float currentTheta = Enes100.getTheta();
+    if (fabs(normalizeAngle(currentTheta - targetTheta)) > 0.05) {
+      drive('l'); // Still turning left
+    } else {
+      drive('s');
+      delay(2000); // Simulate avoidance pause
 
-    // Resume forward
-    drive('f');
-  } else {
+      // Turn back to original heading
+      while (fabs(normalizeAngle(Enes100.getTheta() - originalTheta)) > 0.05) {
+        drive('r');
+      }
+
+      drive('s');
+      delay(300);
+      avoiding = false;
+    }
+  }
+
+  if (!avoiding) {
     drive('f');
   }
 
-  delay(100); // small delay for sensor stability
+  delay(50);
 }
 
+// === Drive control ===
 void drive(char input) {
   switch (input) {
-    case 'f': // forward
+    case 'f':
       digitalWrite(motor1pin1, HIGH);
       digitalWrite(motor1pin2, LOW);
       digitalWrite(motor2pin1, LOW);
       digitalWrite(motor2pin2, HIGH);
       break;
 
-    case 'l': // turn left
+    case 'b':
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+
+    case 'l':
       digitalWrite(motor1pin1, HIGH);
       digitalWrite(motor1pin2, LOW);
       digitalWrite(motor2pin1, HIGH);
       digitalWrite(motor2pin2, LOW);
       break;
 
-    case 's': // stop
+    case 'r':
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+
+    case 's':
       digitalWrite(motor1pin1, LOW);
       digitalWrite(motor1pin2, LOW);
       digitalWrite(motor2pin1, LOW);
       digitalWrite(motor2pin2, LOW);
       break;
   }
+}
+
+// === Normalize angle to [-pi, pi] ===
+float normalizeAngle(float angle) {
+  while (angle > pi) angle -= 2 * pi;
+  while (angle < -pi) angle += 2 * pi;
+  return angle;
 }
