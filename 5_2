@@ -16,6 +16,8 @@ int sensorPin = A1;
 unsigned long ninetyTime = 5000; // Adjust for your turning speed
 
 void setup() {
+Enes100.begin("Sabine's Carpenters", DATA, 345, 1120, 12, 13);
+
   pinMode(motor1pin1, OUTPUT);
   pinMode(motor1pin2, OUTPUT);
   pinMode(motor2pin1, OUTPUT);
