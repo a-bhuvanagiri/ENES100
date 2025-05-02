@@ -10,6 +10,74 @@ extern int motor1pin2;
 extern int motor2pin1;
 extern int motor2pin2;
 
+int trigPin = 6;    
+int echoPin = 7; 
+
+
+
+
+//consider a function to find the average theta value, and then facing east by determing a certain amount of time to run.
+float avgTheta(){
+  float thetaSum = 0.0;
+
+  for(int i = 0; i < 5; i++){
+    if(Enes100.getTheta() != -1){
+      thetaSum += Enes100.getTheta();
+    } 
+    delay(100);
+  }
+  return thetaSum / 5.0;
+}
+
+float avgY() {
+  float ySum = 0.0;
+
+  for (int i = 0; i < 5; i++) {
+    if(Enes100.getY() != -1){
+      ySum += Enes100.getY();
+    } 
+    delay(100);
+  }
+
+  return ySum / 5.0;
+}
+
+float avgX() {
+  float xSum = 0.0;
+
+  for (int i = 0; i < 5; i++) {
+    if(Enes100.getX() != -1){
+      xSum += Enes100.getX();
+    } 
+    delay(100);
+  }
+
+  return xSum / 5.0;
+}
+
+float fullRotationTime = 18.1;
+
+boolean obstaclePresent(){
+  float duration;
+  float distance;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+  distance = (duration*.0343)/2;
+  
+  if(distance < 30){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
 void drive(char input) {
   analogWrite(9, 255);
   analogWrite(10, 255);
@@ -103,4 +171,70 @@ void face(char input) {
   }
 }
 
+/*
+float turnTime(float theta, float desiredTheta){
+  float pi = 10000;
+  thetaDifference = fabs(theta - desiredTheta);
+  float time = thetaDifference * pi / 10000;
+  return time;
+}
+
+void faceBetter(char input) {
+  while (Enes100.getTheta() == -1) delay(1);
+  float pi = 10000;
+  float theta = Enes100.getTheta();
+
+  switch (input) {
+    case 's':
+      if (avgTheta() < 0) {
+        drive('l');
+        delay()
+        while ((theta < -0.06) || (theta > 0.06)) {
+          drive('l'); theta = Enes100.getTheta();
+        }
+      } else {
+        while ((theta < -0.06) || (theta > 0.06)) {
+          drive('r'); theta = Enes100.getTheta();
+        }
+      }
+      break;
+
+    case 'n':
+      if (theta < 0) {
+        while ((theta > -3.07) || (theta == -1)) {
+          drive('r'); theta = Enes100.getTheta();
+        }
+      } else {
+        while ((theta < 3.07) || (theta == -1)) {
+          drive('l'); theta = Enes100.getTheta();
+        }
+      }
+      break;
+
+    case 'e':
+      if ((theta > 1.57) || (theta < -1.57)) {
+        while (!((theta > 1.51) && (theta < 1.63))) {
+          drive('r'); theta = Enes100.getTheta();
+        }
+      } else {
+        while (!((theta > 1.51) && (theta < 1.63))) {
+          drive('l'); theta = Enes100.getTheta();
+        }
+      }
+      break;
+
+    case 'w':
+      if ((theta > 1.57) || (theta < -1.57)) {
+        while (!((theta < -1.51) && (theta > -1.63))) {
+          drive('l'); theta = Enes100.getTheta();
+        }
+      } else {
+        while (!((theta < -1.51) && (theta > -1.63))) {
+          drive('r'); theta = Enes100.getTheta();
+        }
+      }
+      break;
+  }
+}
+*/
 #endif
