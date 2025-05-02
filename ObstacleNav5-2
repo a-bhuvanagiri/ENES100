@@ -19,11 +19,11 @@ int motor2pin2 = 5;
 float ninetyTime = 5200;
 
 void setup() {
-  Serial.begin(9600);
-  /*
+
+  
   Enes100.begin("Sabine's Carpenters", DATA, 333, 1116, 12, 13);
   Enes100.print("Working as intended.");
-  */
+  
   pinMode(motor1pin1, OUTPUT);
   pinMode(motor1pin2, OUTPUT);
   pinMode(motor2pin1, OUTPUT);
@@ -40,22 +40,106 @@ void setup() {
 
 void loop() {
 
-  centerCase();
+  Enes100.println("Running in:");
+  delay(1000);
+  Enes100.println("3");
+  delay(1000);
+  Enes100.println("2");
+  delay(1000);
+  Enes100.println("1");
+  delay(1000);
+  Enes100.println("Starting obstacle nav");
+
+  runCenter();
+
+  Enes100.println("In the second row");
+  Enes100.println(avgX());
+
+  if(avgY() < 1.2 && avgY() > 0.8){
+    Enes100.println("Running the runcenter2ndrow function");
+    runCenter2ndRow();
+  }
+  /*
+  else if(avgY()){
+    
+  }
+  else if(avgY() < ){
+    
+  }
+  */
+  Enes100.println("In the open zone");
 
 }
 
-void centerCase(){
+void runCenter(){
   while(!obstaclePresent()){
     drive('f');
-    
+    delay(100);
+    if(Enes100.getX() > 1.8){
+      Enes100.println("No obstacle detected in first row.");
+      break;
+    }
+  }
+  Enes100.println("Obstacle Detected");
+  drive('l');
+  delay(ninetyTime);
+  drive('f');
+  delay(6000);
+  drive('r');
+  delay(ninetyTime);
+  while(!obstaclePresent()){
+    drive('f');
+    delay(100);
+    if(Enes100.getX() > 1.55){
+      Enes100.println("Only center obstacle detected.");
+      break;
+    }
+  }
+  drive('r');
+  delay(ninetyTime);
+  drive('f');
+  delay(14000);
+  drive('l');
+  delay(6000);
+  drive('f');
+  while(Enes100.getX() < 1.55){
+    drive('f');
+    delay(100);
+  }
+  Enes100.println("Both obstacles detected.");
+}
+
+void runCenter2ndRow(){
+  while(!obstaclePresent()){
+    drive('f');
+    delay(100);
+    if(Enes100.getX() > 2.8){
+      break;
+    }
   }
   drive('l');
   delay(ninetyTime);
   drive('f');
-  delay(7000);
+  delay(6000);
+  drive('r');
+  delay(ninetyTime);
+  while(!obstaclePresent()){
+    drive('f');
+    delay(100);
+    if(Enes100.getX() > 2.8){
+      break;
+    }
+  }
   drive('r');
   delay(ninetyTime);
   drive('f');
-  delay(100000);
+  delay(12000);
+  drive('l');
+  delay(6000);
+  drive('f');
+  while(Enes100.getX() < 2.8){
+    delay(100);
+    drive('f');
+  }
 }
 
