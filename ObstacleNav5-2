@@ -1,0 +1,61 @@
+#include "Enes100.h"
+#include "nav_functions.h"
+
+// Orientation constants
+float north = 3.14;
+float east = 1.57;
+float south = 0;
+float west = -1.57;
+
+// Motor pins
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+
+
+//for nav
+float ninetyTime = 5200;
+
+void setup() {
+  Serial.begin(9600);
+  /*
+  Enes100.begin("Sabine's Carpenters", DATA, 333, 1116, 12, 13);
+  Enes100.print("Working as intended.");
+  */
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  pinMode(9, OUTPUT); 
+  pinMode(10, OUTPUT);
+
+  Serial.begin(9600); 
+}
+
+void loop() {
+
+  centerCase();
+
+}
+
+void centerCase(){
+  while(!obstaclePresent()){
+    drive('f');
+    
+  }
+  drive('l');
+  delay(ninetyTime);
+  drive('f');
+  delay(7000);
+  drive('r');
+  delay(ninetyTime);
+  drive('f');
+  delay(100000);
+}
+
