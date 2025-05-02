@@ -1,0 +1,77 @@
+// Motor pins
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+// Optional: Enable pins (if using PWM speed control)
+int ena = 9;
+int enb = 10;
+
+// Obstacle detection pin (ultrasonic analog input)
+int sensorPin = A1;
+
+// Timing
+unsigned long ninetyTime = 5000; // Adjust for your turning speed
+
+void setup() {
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+
+  pinMode(ena, OUTPUT);
+  pinMode(enb, OUTPUT);
+
+  analogWrite(ena, 255);
+  analogWrite(enb, 255);
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  int distance = analogRead(sensorPin);
+  Serial.println(distance);
+
+  if (distance < 100) {
+    // Obstacle detected
+    drive('s');
+    delay(300);
+
+    // Turn left 90 degrees
+    drive('l');
+    delay(ninetyTime);
+
+    // Resume forward
+    drive('f');
+  } else {
+    drive('f');
+  }
+
+  delay(100); // small delay for sensor stability
+}
+
+void drive(char input) {
+  switch (input) {
+    case 'f': // forward
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, HIGH);
+      break;
+
+    case 'l': // turn left
+      digitalWrite(motor1pin1, HIGH);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH);
+      digitalWrite(motor2pin2, LOW);
+      break;
+
+    case 's': // stop
+      digitalWrite(motor1pin1, LOW);
+      digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);
+      digitalWrite(motor2pin2, LOW);
+      break;
+  }
+}
