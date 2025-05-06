@@ -15,7 +15,7 @@ int motor2pin2 = 5;
 
 // Servo and sensors
 Servo servo;
-int signalPin = 1;
+int signalPin = 8;
 #define hallPin A0
 
 // Logic & timing
@@ -81,11 +81,11 @@ void alignToAngle(float target) {
   }
 
   Enes100.println("Refining alignment...");
-  while (fabs(Enes100.getTheta() - target) > 0.015) {
+  while (fabs(Enes100.getTheta() - target) > 0.05) {
     drive((target == north) ? 'l' : 'r');
-    delay(50);
-    drive('s');
-    delay(150);
+    delay(30);
+   drive('s');
+   delay(150);
   }
   Enes100.println("Facing correct direction.");
 }
@@ -94,13 +94,14 @@ void alignToAngle(float target) {
 void moveToPylon() {
   drive('f');
   int a = analogRead(A1);
-  while (a > 100) {
+  while (a > 30) {
     drive('f');
+    delay(500);
     a = analogRead(A1);
   }
 
   drive('s');
-  delay(200);
+  delay(300);
   Enes100.println("Pylon reached.");
 }
 
@@ -108,54 +109,79 @@ void moveToPylon() {
 void runMission() {
   // LOWER the rack
   if (!servoLowered) {
-    Enes100.println("Lowering servo...");
-    servo.write(95); delay(2000);
-    servo.write(90); delay(1000);
-    servo.write(85); delay(2000);
-    servoLowered = true;
-  }
+  Enes100.println("Lowering servo...");
+  servo.write(95); delay(4000);
+  servoLowered = true;
 
-  // DUTY CYCLE
-  unsigned long highTime = pulseIn(signalPin, HIGH);
-  unsigned long lowTime = pulseIn(signalPin, LOW);
+}
+
+  unsigned long highTime = pulseIn(signalPin, HIGH, 500000); 
+  unsigned long lowTime  = pulseIn(signalPin, LOW, 500000);
+
+  delay(2000);
+  Enes100.println("Reading duty cycle...");
+
+  // DUTY CYCLE with timeout to avoid hanging
+
+  delay(1000);
+
+  Enes100.print("highTime: "); Enes100.println(highTime);
+  Enes100.print("lowTime: "); Enes100.println(lowTime);
+
+
   if (highTime > 0 && lowTime > 0) {
     float dutyCycle = (float)highTime / (highTime + lowTime) * 100.0;
+    
+
+
+    // Round the duty cycle to the nearest 10% (as specified)
     int roundedDuty;
+    if (dutyCycle < 20) {
+      roundedDuty = 10;  // If the duty cycle is less than 20%, round it to 10%
+    } else if (dutyCycle < 40) {
+      roundedDuty = 30;  // If the duty cycle is between 20% and 40%, round it to 30%
+    } else if (dutyCycle < 60) {
+      roundedDuty = 50;  // If the duty cycle is between 40% and 60%, round it to 50%
+    } else if (dutyCycle < 80) {
+      roundedDuty = 70;  // If the duty cycle is between 60% and 80%, round it to 70%
+    } else {
+      roundedDuty = 90;  // If the duty cycle is greater than 80%, round it to 90%
+    }
+    
 
-    if (dutyCycle < 20) roundedDuty = 10;
-    else if (dutyCycle < 40) roundedDuty = 30;
-    else if (dutyCycle < 60) roundedDuty = 50;
-    else if (dutyCycle < 80) roundedDuty = 70;
-    else roundedDuty = 90;
+    Enes100.println(100-roundedDuty);
 
-    Enes100.mission(0, 100 - roundedDuty);
+    // Debugging output for monitoring duty cycle
     Enes100.print("Duty Cycle: ");
     Enes100.print(100 - dutyCycle);
-    Enes100.print("%, Rounded: ");
-    Enes100.println(100 - roundedDuty);
-  } else {
-    Enes100.println("Duty cycle reading failed.");
+    Enes100.print("%, Rounded Duty: ");
+    Enes100.println(100- roundedDuty);
   }
+  
+  // Wait a bit before reading magnetic sensor
+  delay(4000);
 
-  // MAGNETIC SENSOR
+  Enes100.println("Reading magnetic field...");
+
   float sensorValue = analogRead(hallPin);
-  Serial.print("Magnetic Sensor Value: ");
-  Serial.println(sensorValue);
-  Serial.println(sensorValue < 1000 ? "Magnetic field detected!" : "No magnetic field detected.");
+  Enes100.print("Magnetic Sensor Value: ");
+  Enes100.println(sensorValue);
+  Enes100.println(sensorValue < 1000 ? "Magnetic field detected!" : "No magnetic field detected.");
 
   // RAISE the rack
-  if (!servoRaised) {
-    Enes100.println("Raising servo...");
-    servo.write(90); delay(2000);
-    servo.write(100); delay(2000);
-    servo.write(115); delay(2000);
-    servoRaised = true;
-  }
+  Enes100.println("Raising servo...");
+  //servo.write(90); Enes100.println("Servo to 90"); delay(1000);
+  servo.write(80); Enes100.println("Servo to 80"); delay(8000);
+  servoRaised = true;
+
+  Enes100.println("Mission tasks complete. Retreating...");
+
 
   // RETREAT and turn
   drive('b'); delay(5000);
   drive((Enes100.getY() > 1.0) ? 'l' : 'r'); delay(ninetyTime);
   drive('f');
+
 }
 
 // -------- Motor Drive Function --------
