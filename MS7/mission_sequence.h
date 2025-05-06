@@ -6,7 +6,218 @@
 
 
 void runMission(){
+// Orientation values
+float north = 3.14;
+float east = 1.57;
+float south = 0;
+float west = -1.57;
+
+// Tank control
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+
+// Servo and sensors
+Servo servo;
+int signalPin = 8;
+#define hallPin A0
+
+// Logic & timing
+bool missionDone = false;
+bool servoLowered = false;
+bool servoRaised = false;
+float ninetyTime = 5000;
+
+void setup() {
+  Enes100.begin("Sabine's Carpenters", DATA, 333, 1116, 12, 13);
+  Enes100.print("Setup complete.");
+
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(signalPin, INPUT);
+  pinMode(hallPin, INPUT);
+
+  servo.attach(11);
+  servo.write(90);  // Neutral
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (!missionDone) {
+    float y = Enes100.getY();
+    float theta = Enes100.getTheta();
+
+    // -------- POSITION A --------
+    if (y > 1.2) {
+      Enes100.println("In position A.");
+      alignToAngle(south);
+
+      moveToPylon();
+      runMission();
+      missionDone = true;
+    }
+
+    // -------- POSITION B --------
+    else if (y < 0.8 && y > 0.0) {
+      Enes100.println("In position B.");
+      alignToAngle(north);
+
+      moveToPylon();
+      runMission();
+      missionDone = true;
+    }
+  }
+
+  if (missionDone) {
+    drive('b'); // keep moving forward after everything's done
+  }
+}
+
+// -------- Align to target angle --------
+void alignToAngle(float target) {
+  while (fabs(Enes100.getTheta() - target) > 0.2) {
+    drive((target == north) ? 'l' : 'r');
+  }
+
+  Enes100.println("Refining alignment...");
+  while (fabs(Enes100.getTheta() - target) > 0.05) {
+    drive((target == north) ? 'l' : 'r');
+    delay(30);
+   drive('s');
+   delay(150);
+  }
+  Enes100.println("Facing correct direction.");
+}
+
+// -------- IR Sensor-based Movement to Pylon --------
+void moveToPylon() {
+  drive('f');
+  int a = analogRead(A1);
+  while (a > 30) {
+    drive('f');
+    delay(500);
+    a = analogRead(A1);
+  }
+
+  drive('s');
+  delay(300);
+  Enes100.println("Pylon reached.");
+}
+
+// -------- Mission: Lower rack, read duty cycle, magnetic, raise rack, retreat --------
+void runMission() {
+  // LOWER the rack
+  if (!servoLowered) {
+  Enes100.println("Lowering servo...");
+  servo.write(105); delay(4000);
+  servoLowered = true;
+
+}
+
+  unsigned long highTime = pulseIn(signalPin, HIGH, 500000); 
+  unsigned long lowTime  = pulseIn(signalPin, LOW, 500000);
+
+  delay(4000);
+  Enes100.println("Reading duty cycle...");
+
+  // DUTY CYCLE with timeout to avoid hanging
+
+  delay(1000);
+
+  Enes100.print("highTime: "); Enes100.println(highTime);
+  Enes100.print("lowTime: "); Enes100.println(lowTime);
+
+
+  if (highTime > 0 && lowTime > 0) {
+    float dutyCycle = (float)highTime / (highTime + lowTime) * 100.0;
+    
+
+
+    // Round the duty cycle to the nearest 10% (as specified)
+    int roundedDuty;
+    if (dutyCycle < 20) {
+      roundedDuty = 10;  // If the duty cycle is less than 20%, round it to 10%
+    } else if (dutyCycle < 40) {
+      roundedDuty = 30;  // If the duty cycle is between 20% and 40%, round it to 30%
+    } else if (dutyCycle < 60) {
+      roundedDuty = 50;  // If the duty cycle is between 40% and 60%, round it to 50%
+    } else if (dutyCycle < 80) {
+      roundedDuty = 70;  // If the duty cycle is between 60% and 80%, round it to 70%
+    } else {
+      roundedDuty = 90;  // If the duty cycle is greater than 80%, round it to 90%
+    }
+    
+
+    Enes100.mission(CYCLE, 100-roundedDuty);
+
+    // Debugging output for monitoring duty cycle
+    Enes100.print("Duty Cycle: ");
+    Enes100.print(100 - dutyCycle);
+    Enes100.print("%, Rounded Duty: ");
+    Enes100.println(100- roundedDuty);
+  }
   
+  // Wait a bit before reading magnetic sensor
+  delay(4000);
+
+  Enes100.println("Reading magnetic field...");
+
+  float sensorValue = analogRead(hallPin);
+  Enes100.print("Magnetic Sensor Value: ");
+  Enes100.println(sensorValue);
+  Enes100.println(sensorValue < 1000 ? "Magnetic field detected!" : "No magnetic field detected.");
+
+  // RAISE the rack
+  Enes100.println("Raising servo...");
+  //servo.write(90); Enes100.println("Servo to 90"); delay(1000);
+  servo.write(80); Enes100.println("Servo to 80"); delay(8000);
+  servoRaised = true;
+
+  Enes100.println("Mission tasks complete. Retreating...");
+
+
+  // RETREAT and turn
+  drive('b'); delay(5000);
+  drive((Enes100.getY() > 1.0) ? 'l' : 'r'); delay(ninetyTime);
+  drive('f');
+
+}
+
+// -------- Motor Drive Function --------
+void drive(char input) {
+  analogWrite(9, 255);
+  analogWrite(10, 255);
+
+  switch (input) {
+    case 'f':
+      digitalWrite(motor1pin1, HIGH); digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);  digitalWrite(motor2pin2, HIGH);
+      break;
+    case 'b':
+      digitalWrite(motor1pin1, LOW);  digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, HIGH); digitalWrite(motor2pin2, LOW);
+      break;
+    case 'r':
+      digitalWrite(motor1pin1, LOW);  digitalWrite(motor1pin2, HIGH);
+      digitalWrite(motor2pin1, LOW);  digitalWrite(motor2pin2, HIGH);
+      break;
+    case 'l':
+      digitalWrite(motor1pin1, HIGH); digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, HIGH); digitalWrite(motor2pin2, LOW);
+      break;
+    case 's':
+      digitalWrite(motor1pin1, LOW);  digitalWrite(motor1pin2, LOW);
+      digitalWrite(motor2pin1, LOW);  digitalWrite(motor2pin2, LOW);
+      break;
+  }
+}
+
 }
 
 
