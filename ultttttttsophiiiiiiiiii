@@ -35,9 +35,9 @@ float firstCol = 0.85;
 float secondCol = 1.70;
 float openZone = 3.1;
 float distanceThreshold = 30;
-float forwardSpeed = 70;
+float forwardSpeed = 220;
 float forwardAdjustPercent = 0.90;
-float turnSpeed = 70;
+float turnSpeed = 170;
 
 
 // State dictates what case to run
