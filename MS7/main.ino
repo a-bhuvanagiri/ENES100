@@ -53,7 +53,30 @@ void loop() {
 
 
   Enes100.println("Running the start sequence.");
-  runMission();
+  if (!missionDone) {
+    float y = Enes100.getY();
+
+    if (y > 1.2) {
+      Enes100.println("In position A.");
+      alignToAngle(south);
+      moveToPylon();
+      runMission();
+      missionDone = true;
+    } else if (y < 0.8 && y > 0.0) {
+      Enes100.println("In position B.");
+      alignToAngle(north);
+      moveToPylon();
+      runMission();
+      missionDone = true;
+    }
+  }
+
+  if (missionDone) {
+    drive('b');
+    delay(1000);
+    drive('s');
+  }
+
   Enes100.println("Start sequence completed.");
   
   faceEast();
