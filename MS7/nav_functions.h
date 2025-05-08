@@ -119,24 +119,22 @@ void drive(char input) {
 
 
 void faceEast() {
-  if(!Enes100.isVisible()){
-    delay(100);
-  }
 
-  if(Enes100.getTheta() > 1.53){
-      while(Enes100.getTheta() > 1.54){
+
+  if(Enes100.getTheta() > 1.55){
+      while(Enes100.getTheta() > 1.56){
         drive('r');
         delay(30);
         drive('s');
-        delay(200);
+        delay(100);
       }
   }
-  else if(Enes100.getTheta() < 1.53){
-    while(Enes100.getTheta() < 1.52){
+  else if(Enes100.getTheta() < 1.55){
+    while(Enes100.getTheta() < 1.54){
         drive('l');
         delay(30);
         drive('s');
-        delay(200);
+        delay(100);
       }
   }
 }
