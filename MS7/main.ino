@@ -1,11 +1,24 @@
 #include "Enes100.h"
 #include "nav_functions.h"
 #include "mission_sequence.h"
-#include "obstacle_nav.h"
 #include "log.h"
+
+//delete later
+#include <Arduino.h>
+#include <Servo.h>
+#include "Enes100.h"
+
+
 
 
 float east = 1.54;
+
+
+int signalPin = 8;
+int hallPin = A0;
+
+bool servoLowered = false;
+bool servoRaised = false;
 
 // Motor pins
 int motor1pin1 = 2;
@@ -13,9 +26,15 @@ int motor1pin2 = 3;
 int motor2pin1 = 4;
 int motor2pin2 = 5;
 
+bool missionDone = false;
+
+
 void setup() {
-  Enes100.begin("Sabine's Carpenters", DATA, 333, 1120, 12, 13);
+  Enes100.begin("Sabine's Carpenters", DATA, 333, 1116, 12, 13);
   Enes100.print("Working as intended.");
+  
+  servo.attach(11);
+  servo.write(90);
   
   pinMode(motor1pin1, OUTPUT);
   pinMode(motor1pin2, OUTPUT);
@@ -26,14 +45,12 @@ void setup() {
   pinMode(echoPin, INPUT);
 
   pinMode(9, OUTPUT); 
-  pinMode(10, OUTPUT);
+  pinMode(10, OUTPUT); 
 
   Serial.begin(9600); 
 }
 
 void loop() {
-  
-
 
   Enes100.println("Running in:");
   delay(1000);
@@ -44,13 +61,8 @@ void loop() {
   Enes100.println("1");
   delay(1000);
 
-  //this is to test at the beginning of the next openlab section
-  Enes100.println("Going to try the faceEast() function");
-  faceEast();
-  drive('s');
-  Enes100.println("I should be facing east now.");
-  delay(100000);
 
+  //this is to test at the beginning of the next openlab section
 
   Enes100.println("Running the start sequence.");
   if (!missionDone) {
@@ -73,7 +85,7 @@ void loop() {
 
   if (missionDone) {
     drive('b');
-    delay(1000);
+    delay(4500);
     drive('s');
   }
 
@@ -101,4 +113,3 @@ void loop() {
   delay(100000);
 
 }
-
