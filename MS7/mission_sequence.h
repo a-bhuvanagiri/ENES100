@@ -7,7 +7,7 @@
 
 // Orientation constants
 const float north = 3.14;
-const float east  = 1.57;
+//const float east  = 1.57;
 const float south = 0;
 const float west  = -1.57;
 
@@ -20,37 +20,11 @@ extern int signalPin;
 extern int hallPin;
 extern bool servoLowered;
 extern bool servoRaised;
-extern Servo servo;
+Servo servo;
 extern float ninetyTime;
-
+extern bool yes=false;
 // -------------------- Driving --------------------
-void drive(char input) {
-  analogWrite(9, 255);
-  analogWrite(10, 255);
 
-  switch (input) {
-    case 'f':
-      digitalWrite(motor1pin1, HIGH); digitalWrite(motor1pin2, LOW);
-      digitalWrite(motor2pin1, LOW);  digitalWrite(motor2pin2, HIGH);
-      break;
-    case 'b':
-      digitalWrite(motor1pin1, LOW);  digitalWrite(motor1pin2, HIGH);
-      digitalWrite(motor2pin1, HIGH); digitalWrite(motor2pin2, LOW);
-      break;
-    case 'r':
-      digitalWrite(motor1pin1, LOW);  digitalWrite(motor1pin2, HIGH);
-      digitalWrite(motor2pin1, LOW);  digitalWrite(motor2pin2, HIGH);
-      break;
-    case 'l':
-      digitalWrite(motor1pin1, HIGH); digitalWrite(motor1pin2, LOW);
-      digitalWrite(motor2pin1, HIGH); digitalWrite(motor2pin2, LOW);
-      break;
-    case 's':
-      digitalWrite(motor1pin1, LOW);  digitalWrite(motor1pin2, LOW);
-      digitalWrite(motor2pin1, LOW);  digitalWrite(motor2pin2, LOW);
-      break;
-  }
-}
 
 // -------------------- Orientation --------------------
 void alignToAngle(float target) {
@@ -81,15 +55,17 @@ void moveToPylon() {
   drive('s');
   delay(300);
   Enes100.println("Pylon reached.");
+  yes=true;
 }
 
 // -------------------- Mission Sequence --------------------
 void runMission() {
-  if (!servoLowered) {
-    Enes100.println("Lowering servo...");
-    servo.write(95); delay(4000);
-    servoLowered = true;
+  Enes100.println("Lowering servo...");
+  if (!servoLowered){
+  servo.write(97); 
+  delay(4000);
   }
+  
 
   unsigned long highTime = pulseIn(signalPin, HIGH, 500000); 
   unsigned long lowTime  = pulseIn(signalPin, LOW, 500000);
@@ -105,13 +81,15 @@ void runMission() {
     else if (dutyCycle < 40)  roundedDuty = 30;
     else if (dutyCycle < 60)  roundedDuty = 50;
     else if (dutyCycle < 80)  roundedDuty = 70;
-    else                      roundedDuty = 90;
+    else{
+      roundedDuty = 90;
+    }
 
-    Enes100.println(100 - roundedDuty);
     Enes100.print("Duty Cycle: ");
-    Enes100.print(100 - dutyCycle);
+    Enes100.print(dutyCycle);
     Enes100.print("%, Rounded Duty: ");
-    Enes100.println(100 - roundedDuty);
+    Enes100.println(roundedDuty);
+
   }
 
   delay(4000);
@@ -122,13 +100,22 @@ void runMission() {
   Enes100.println(sensorValue < 1000 ? "Magnetic field detected!" : "No magnetic field detected.");
 
   Enes100.println("Raising servo...");
-  servo.write(80); delay(8000);
+  delay(500);
+  servo.write(90);
+  delay(500);
+  servo.write(87); 
+  delay(8000);
   servoRaised = true;
 
+  Enes100.println("Rack fully raised. Waiting in place.");
+  drive('s');  
+  delay(2000);
+
   Enes100.println("Mission tasks complete. Retreating...");
-  drive('b'); delay(5000);
-  drive((Enes100.getY() > 1.0) ? 'l' : 'r'); delay(ninetyTime);
-  drive('f');
+  if (servoRaised==true){
+    drive('b'); 
+  }
+
 }
 
 #endif
