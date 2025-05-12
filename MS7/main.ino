@@ -30,11 +30,11 @@ bool missionDone = false;
 
 
 void setup() {
-  Enes100.begin("Sabine's Carpenters", DATA, 333, 1116, 12, 13);
+  Enes100.begin("Sabine's Carpenters", DATA, 333, 1120, 12, 13);
   Enes100.print("Working as intended.");
   
-  servo.attach(11);
-  servo.write(90);
+  //servo.attach(11);
+  //servo.write(90);
   
   pinMode(motor1pin1, OUTPUT);
   pinMode(motor1pin2, OUTPUT);
@@ -59,7 +59,26 @@ void loop() {
   Enes100.println("2");
   delay(1000);
   Enes100.println("1");
+  /*
   delay(1000);
+  drive('f');
+  delay(2000);
+  drive('s');
+  delay(5000);
+  servo.attach(11);
+  servo.write(90);
+  delay(1000);
+  servo.write(95);
+  delay(4000);
+  servo.write(90);
+  delay(4000);
+  servo.write(87);
+  delay(8000);
+  servo.write(90);
+  delay(100000);
+  */
+
+
 
 
   //this is to test at the beginning of the next openlab section
@@ -89,6 +108,11 @@ void loop() {
     drive('s');
   }
 
+  servo.write(95); 
+  delay(2000);
+  servo.write(90);
+  servo.detach();
+
   Enes100.println("Start sequence completed.");
   
   faceEast();
@@ -100,12 +124,23 @@ void loop() {
 
   Enes100.println("Starting the log sequence.");
   logSequence();
-  Enes100.println("Driving forward to freedom.");
-
-  while(Enes100.getX() < 3.6){
-    delay(100);
-  }
   
+
+  Enes100.println("Now going to face east.");
+  faceEast();
+
+  drive('f');
+  Enes100.println("Driving forward to freedom.");
+  delay(20000);
+  while(Enes100.getX()<3.9){
+    Enes100.println("Trying again.");
+    drive('s');
+    delay(1000);
+    drive('f');
+    delay(5000);
+  }
+
+
   drive('s');
   Enes100.println("They didn't believe in us.");
   delay(2000);
