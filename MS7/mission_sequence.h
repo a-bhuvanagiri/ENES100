@@ -28,10 +28,11 @@ extern bool yes=false;
 
 // -------------------- Orientation --------------------
 void alignToAngle(float target) {
-  while (fabs(Enes100.getTheta() - target) > 0.2) {
+  while (fabs(Enes100.getTheta() - target) > 0.25) {
     drive((target == north) ? 'l' : 'r');
   }
 
+  /*
   Enes100.println("Refining alignment...");
   while (fabs(Enes100.getTheta() - target) > 0.05) {
     drive((target == north) ? 'l' : 'r');
@@ -39,6 +40,7 @@ void alignToAngle(float target) {
     drive('s');
     delay(150);
   }
+  */
   Enes100.println("Facing correct direction.");
 }
 
@@ -48,12 +50,12 @@ void moveToPylon() {
   int a = analogRead(A1);
   while (a > 30) {
     drive('f');
-    delay(500);
+    delay(20);
     a = analogRead(A1);
   }
 
+  delay(600);
   drive('s');
-  delay(300);
   Enes100.println("Pylon reached.");
   yes=true;
 }
@@ -61,9 +63,12 @@ void moveToPylon() {
 // -------------------- Mission Sequence --------------------
 void runMission() {
   Enes100.println("Lowering servo...");
+  servo.attach(11);
+  servo.write(90);
   if (!servoLowered){
   servo.write(97); 
   delay(4000);
+  servo.write(90);
   }
   
 
@@ -100,12 +105,11 @@ void runMission() {
   Enes100.println(sensorValue < 1000 ? "Magnetic field detected!" : "No magnetic field detected.");
 
   Enes100.println("Raising servo...");
-  delay(500);
-  servo.write(90);
-  delay(500);
-  servo.write(87); 
+  servo.write(86); 
   delay(8000);
   servoRaised = true;
+  servo.write(90);
+  
 
   Enes100.println("Rack fully raised. Waiting in place.");
   drive('s');  
